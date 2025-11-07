@@ -597,6 +597,22 @@ function Task() {
     }
   }, [])
 
+  // Push history state for internal Task navigation and handle browser back/forward
+  useEffect(() => {
+    try {
+      window.history.pushState({ taskPage: currentPage }, '', `#Task-${currentPage}`)
+    } catch {}
+  }, [currentPage])
+
+  useEffect(() => {
+    const onPopTask = (e) => {
+      const page = (e.state && e.state.taskPage) || 'home'
+      setCurrentPage(page)
+    }
+    window.addEventListener('popstate', onPopTask)
+    return () => window.removeEventListener('popstate', onPopTask)
+  }, [])
+
   /**
    * HomePage Component
    * 

@@ -2084,3 +2084,831 @@ html {
   .calendar-subject-select { min-width: 200px; }
   .calendar-legend { flex-direction: column; gap: 0.5rem; }
 }
+
+/* ===================================
+   Attendance Tracker - Shared Styles (New Component)
+   =================================== */
+
+/* ===================================
+   Global Variables & Reset
+   =================================== */
+.attendance-tracker,
+.calendar-view {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fbf9f1 0%, #f0ede1 50%, #e8e3d3 100%);
+  padding: 1rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+/* ===================================
+   Header Styles
+   =================================== */
+.tracker-header,
+.calendar-header {
+  background: transparent;
+  border-radius: 0;
+  padding: 0.8rem 0;
+  margin-bottom: 0.5rem;
+  box-shadow: none;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tracker-title,
+.calendar-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #1a1200;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-align: center;
+}
+
+.title-icon {
+  font-size: 1.2rem;
+}
+
+.title-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* ===================================
+   Button Styles
+   =================================== */
+.btn-calendar,
+.btn-undo,
+.btn-back,
+.btn-add,
+.btn-nav,
+.btn-show-more {
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-calendar {
+  background: linear-gradient(135deg, #f4b30c 0%, #ff8c42 100%);
+  color: #ffffff;
+}
+
+.btn-calendar:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(244, 179, 12, 0.3);
+}
+
+.btn-undo {
+  background: #ddd9c5;
+  color: #1a1200;
+}
+
+.btn-undo:hover {
+  background: #ccc8b5;
+  transform: translateY(-1px);
+}
+
+.btn-back {
+  background: #1a1200;
+  color: #ffffff;
+}
+
+.btn-back:hover {
+  background: #2a2200;
+  transform: translateY(-1px);
+}
+
+.btn-add {
+  background: linear-gradient(135deg, #f4b30c 0%, #ff8c42 100%);
+  color: #ffffff;
+}
+
+.btn-add:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(244, 179, 12, 0.3);
+}
+
+.btn-nav {
+  background: #ffffff;
+  color: #1a1200;
+  border: 1px solid #ddd9c5;
+}
+
+.btn-nav:hover {
+  background: #fbf9f1;
+  border-color: #f4b30c;
+}
+
+.btn-show-more {
+  background: transparent;
+  color: #f4b30c;
+  border: 1px solid #f4b30c;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.btn-show-more:hover {
+  background: #f4b30c;
+  color: #ffffff;
+}
+
+/* ===================================
+   Configuration Panel
+   =================================== */
+.config-panel {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 0.8rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.config-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.config-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.config-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #1a1200;
+}
+
+.config-input {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #ddd9c5;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  background: #fbf9f1;
+  color: #1a1200;
+  transition: all 0.2s ease;
+}
+
+.config-input:focus {
+  outline: none;
+  border-color: #f4b30c;
+  box-shadow: 0 0 0 2px rgba(244, 179, 12, 0.1);
+}
+
+.add-subject-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.add-subject-group .config-input {
+  flex: 1;
+}
+
+/* ===================================
+   Subjects List
+   =================================== */
+.subjects-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.subject-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.6rem;
+  background: linear-gradient(135deg, #f4b30c 0%, #ff8c42 100%);
+  color: #ffffff;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.btn-remove-tag {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.btn-remove-tag:hover {
+  transform: scale(1.2);
+}
+
+/* ===================================
+   Subject Cards Grid
+   =================================== */
+.subjects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.subject-card {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 0.8rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.subject-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(244, 179, 12, 0.2);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+
+.card-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1a1200;
+  margin: 0;
+}
+
+.attendance-badge {
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.status-good {
+  background: #4CAF50;
+  color: #ffffff;
+}
+
+.status-warning {
+  background: #ff9800;
+  color: #ffffff;
+}
+
+.card-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid #ddd9c5;
+}
+
+.stat-item {
+  font-size: 0.65rem;
+  color: #666;
+}
+
+.btn-toggle-form {
+  width: 100%;
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #f4b30c 0%, #ff8c42 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 0.6rem;
+}
+
+.btn-toggle-form:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(244, 179, 12, 0.3);
+}
+
+.card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.attendance-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.section-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #1a1200;
+  opacity: 0.8;
+}
+
+.date-input {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #ddd9c5;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  background: #fbf9f1;
+  color: #1a1200;
+  cursor: pointer;
+}
+
+.action-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+
+.action-buttons-regular {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.4rem;
+}
+
+.action-buttons-extra {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.4rem;
+}
+
+.btn-present,
+.btn-absent,
+.btn-extra,
+.btn-extra-present,
+.btn-extra-absent {
+  padding: 0.4rem 0.6rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-present {
+  background: #4CAF50;
+  color: #ffffff;
+}
+
+.btn-present:hover {
+  background: #45a049;
+  transform: scale(1.02);
+}
+
+.btn-absent {
+  background: #f44336;
+  color: #ffffff;
+}
+
+.btn-absent:hover {
+  background: #da190b;
+  transform: scale(1.02);
+}
+
+.btn-extra {
+  background: #ff9800;
+  color: #ffffff;
+}
+
+.btn-extra:hover {
+  background: #e68900;
+  transform: scale(1.02);
+}
+
+.btn-extra-present {
+  background: #4CAF50;
+  color: #ffffff;
+}
+
+.btn-extra-present:hover {
+  background: #45a049;
+  transform: scale(1.02);
+}
+
+.btn-extra-absent {
+  background: #f44336;
+  color: #ffffff;
+}
+
+.btn-extra-absent:hover {
+  background: #da190b;
+  transform: scale(1.02);
+}
+
+/* ===================================
+   Sessions History
+   =================================== */
+.sessions-history {
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid #ddd9c5;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+
+.history-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #1a1200;
+  margin: 0;
+}
+
+.btn-toggle-sessions {
+  padding: 0.3rem 0.6rem;
+  background: #f4b30c;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-toggle-sessions:hover {
+  background: #e0a00b;
+  transform: scale(1.05);
+}
+
+.sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.session-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.3rem 0.5rem;
+  background: #fbf9f1;
+  border-radius: 6px;
+  font-size: 0.65rem;
+}
+
+.session-date {
+  color: #666;
+  font-weight: 500;
+}
+
+.session-status {
+  font-weight: 600;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+}
+
+.status-present {
+  background: #4CAF50;
+  color: #ffffff;
+}
+
+.status-absent {
+  background: #f44336;
+  color: #ffffff;
+}
+
+.status-extra {
+  background: #ff9800;
+  color: #ffffff;
+}
+
+.session-status {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.btn-delete-session {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.2rem;
+  transition: transform 0.2s ease;
+}
+
+.btn-delete-session:hover {
+  transform: scale(1.2);
+}
+
+/* ===================================
+   Empty State
+   =================================== */
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 8px;
+  color: #666;
+  font-size: 0.8rem;
+}
+
+/* ===================================
+   Responsive Design
+   =================================== */
+@media (min-width: 1200px) {
+  .subjects-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .subjects-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  /* Prevent overlap with fixed back arrow on small screens */
+  .attendance-tracker { padding-top: 64px; }
+  .back-arrow-btn { top: 16px; left: 12px; width: 40px; height: 40px; }
+
+  .subjects-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .header-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .tracker-title,
+  .calendar-title {
+    font-size: 1.2rem;
+  }
+  .header-actions {
+    justify-content: stretch;
+  }
+  .btn-calendar,
+  .btn-undo,
+  .btn-back {
+    flex: 1;
+  }
+  .action-buttons,
+  .action-buttons-extra {
+    grid-template-columns: 1fr;
+  }
+  /* Keep Present/Absent side-by-side on mobile */
+  .action-buttons-regular {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  /* Keep Extra buttons side-by-side on mobile */
+  .action-buttons-extra {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .subjects-grid { grid-template-columns: 1fr; }
+  .calendar-grid-section { width: 100%; padding: 0.6rem; margin: 0.6rem auto; }
+  .calendar-controls { padding: 0.6rem; }
+  .legend-content { gap: 0.6rem; }
+  .legend-items { gap: 0.6rem; }
+  .calendar-container { padding: 0; }
+  .calendar-weekdays { gap: 0.2rem; }
+  .weekday { padding: 0.25rem 0.15rem; font-size: 0.6rem; }
+  .calendar-grid { gap: 0.2rem; }
+  .calendar-day { min-height: 36px; padding: 0.2rem; }
+  .day-number { font-size: 0.6rem; }
+}
+
+/* ===================================
+   Calendar Theme Overrides (Root color combo)
+   =================================== */
+.calendar-grid-section,
+.calendar-controls,
+.calendar-legend {
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--beige-footer);
+}
+
+.calendar-controls { padding: 0.8rem 1rem; }
+.calendar-legend { padding: 0.6rem 0.8rem; }
+.calendar-container { padding: 0.8rem; }
+
+.control-label,
+.legend-title,
+.current-month,
+.weekday,
+.calendar-title { color: var(--brown); }
+
+.subject-select,
+.btn-nav {
+  background: var(--white);
+  color: var(--brown);
+  border: 1px solid var(--beige-footer);
+  border-radius: 8px;
+  padding: 0.35rem 0.6rem;
+}
+
+.btn-nav:hover,
+.subject-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(244,179,12,0.12);
+}
+
+.calendar-weekdays { gap: 0.3rem; }
+.weekday {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--brown);
+  padding: 0.4rem 0.2rem;
+  background: #fbf9f1;
+  border-radius: 6px;
+  border: 1px solid var(--beige-footer);
+}
+
+.calendar-grid { gap: 0.3rem; }
+.calendar-day {
+  background: var(--white);
+  border: 1px solid var(--beige-footer);
+  border-radius: 10px;
+  min-height: 64px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+
+.calendar-day.today {
+  border: 2px solid var(--accent);
+  box-shadow: 0 4px 10px rgba(244,179,12,0.15);
+}
+
+.calendar-day.present {
+  background: linear-gradient(135deg, #e9f7ec 0%, #dff4e6 100%);
+  border-color: #a5d6a7;
+  color: #1b5e20;
+}
+
+.calendar-day.absent {
+  background: linear-gradient(135deg, #fdecea 0%, #fbe2df 100%);
+  border-color: #ef9a9a;
+  color: #b71c1c;
+}
+
+.calendar-day.extra {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe7c7 100%);
+  border-color: #ffcc80;
+  color: #e65100;
+}
+
+.calendar-day.mixed {
+  background: linear-gradient(135deg, #e9f7ec 0%, #fdecea 100%);
+  border-color: var(--accent);
+  color: var(--brown);
+}
+
+.day-number { color: var(--brown); font-weight: 700; }
+.legend-text { color: #666; }
+
+/* Legend color chips matching markup 'legend-color legend-...' */
+.legend-color.legend-present { background: #4CAF50; }
+.legend-color.legend-absent { background: #f44336; }
+.legend-color.legend-extra { background: #ff9800; }
+.legend-color.legend-mixed { background: linear-gradient(135deg, #4CAF50 0%, #f44336 100%); }
+
+/* ===================================
+   Calendar Layout Alignment (controls + legend)
+   =================================== */
+.calendar-grid-section { 
+  max-width: 920px; 
+  margin: 0 auto 1rem; 
+}
+
+.calendar-controls { 
+  margin-bottom: 0.8rem; 
+}
+
+.controls-content { 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  gap: 1rem; 
+  flex-wrap: wrap; 
+}
+
+.control-group { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 0.35rem; 
+  min-width: 240px; 
+}
+
+.subject-select { min-width: 240px; }
+
+.month-navigation { 
+  display: flex; 
+  align-items: center; 
+  gap: 0.6rem; 
+}
+
+.current-month { 
+  padding: 0.35rem 0.6rem; 
+  background: #fbf9f1; 
+  border: 1px solid var(--beige-footer); 
+  border-radius: 8px; 
+}
+
+.calendar-legend { 
+  margin-top: 0.8rem; 
+}
+
+.legend-content { 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 1.2rem; 
+  flex-wrap: wrap; 
+}
+
+.legend-items { 
+  display: flex; 
+  align-items: center; 
+  gap: 1rem; 
+  flex-wrap: wrap; 
+}
+
+.legend-item { 
+  font-size: 0.8rem; 
+}
+
+@media (max-width: 767px) {
+  .calendar-grid-section { max-width: 100%; }
+  .controls-content { justify-content: center; }
+  .control-group { min-width: 180px; }
+  .subject-select { min-width: 180px; }
+}
+
+/* ===================================
+   Attendance header = Grade Predictor header (overrides)
+   =================================== */
+.grade-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px #f4b30c;
+}
+
+.grade-title {
+  margin: 0;
+  color: var(--brown);
+  font-size: 2rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Back button same as Grade Predictor */
+.back-btn {
+  background: var(--white);
+  border: 1px solid rgba(0,0,0,0.12);
+  color: var(--brown);
+  font-weight: 600;
+  padding: 12px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--brown);
+}
