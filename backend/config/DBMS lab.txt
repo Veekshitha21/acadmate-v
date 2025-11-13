@@ -1,0 +1,269 @@
+Sailors Database
+🔹 ER Diagram (text-based)
+Sailor (sid, sname, rating, age)
+Boat (bid, bname, color)
+Reserves (sid, bid, date)
+
+Relationships:
+Sailor (1) ——< Reserves >—— (1) Boat
+
+🔹 Schema Diagram
+
+SAILORS(sid PK)
+
+BOAT(bid PK)
+
+RSERVES(sid FK → SAILORS.sid, bid FK → BOAT.bid)
+
+🔹 SQL Commands
+CREATE TABLE Sailors (
+  sid INT PRIMARY KEY,
+  sname VARCHAR(30),
+  rating INT,
+  age INT
+);
+
+CREATE TABLE Boat (
+  bid INT PRIMARY KEY,
+  bname VARCHAR(30),
+  color VARCHAR(15)
+);
+
+CREATE TABLE Rserves (
+  sid INT,
+  bid INT,
+  rdate DATE,
+  PRIMARY KEY (sid, bid),
+  FOREIGN KEY (sid) REFERENCES Sailors(sid),
+  FOREIGN KEY (bid) REFERENCES Boat(bid)
+);
+
+✅ Insert Tuples
+INSERT INTO Sailors VALUES (1, 'John', 8, 25);
+INSERT INTO Sailors VALUES (2, 'Alex', 6, 30);
+INSERT INTO Sailors VALUES (3, 'Mary', 9, 22);
+INSERT INTO Sailors VALUES (4, 'Steve', 7, 28);
+INSERT INTO Sailors VALUES (5, 'Anna', 10, 24);
+
+INSERT INTO Boat VALUES (101, 'Voyager', 'Red');
+INSERT INTO Boat VALUES (102, 'Neptune', 'Blue');
+INSERT INTO Boat VALUES (103, 'Sea Queen', 'Green');
+INSERT INTO Boat VALUES (104, 'Poseidon', 'White');
+INSERT INTO Boat VALUES (105, 'Aqua', 'Yellow');
+
+INSERT INTO Rserves VALUES (1, 101, '2024-05-21');
+INSERT INTO Rserves VALUES (2, 102, '2024-06-11');
+INSERT INTO Rserves VALUES (3, 103, '2024-07-10');
+INSERT INTO Rserves VALUES (4, 104, '2024-07-14');
+INSERT INTO Rserves VALUES (5, 105, '2024-08-01');
+
+🔸 Alter Table Example
+ALTER TABLE Sailors ADD COLUMN phone VARCHAR(15);
+ALTER TABLE Sailors DROP COLUMN phone;
+ALTER TABLE Boat ADD CONSTRAINT unique_bname UNIQUE (bname);
+
+🔸 Delete/Update
+UPDATE Sailors SET rating = 9 WHERE sid = 2;
+DELETE FROM Boat WHERE bid = 105;
+
+
+🅑 Insurance Database
+🔹 ER Diagram
+Person (driver_id#, name, address)
+Car (regno, model, year)
+Accident (report_number, acc_date, location)
+Owns (driver_id#, regno)
+Participated (driver_id#, regno, report_number, damage_amount)
+
+Relations:
+Person — Owns — Car
+Car — Participated — Accident
+
+🔹 SQL Schema
+CREATE TABLE Person (
+  driver_id VARCHAR(10) PRIMARY KEY,
+  name VARCHAR(30),
+  address VARCHAR(50)
+);
+
+CREATE TABLE Car (
+  regno VARCHAR(10) PRIMARY KEY,
+  model VARCHAR(20),
+  year INT
+);
+
+CREATE TABLE Accident (
+  report_number INT PRIMARY KEY,
+  acc_date DATE,
+  location VARCHAR(30)
+);
+
+CREATE TABLE Owns (
+  driver_id VARCHAR(10),
+  regno VARCHAR(10),
+  PRIMARY KEY (driver_id, regno),
+  FOREIGN KEY (driver_id) REFERENCES Person(driver_id),
+  FOREIGN KEY (regno) REFERENCES Car(regno)
+);
+
+CREATE TABLE Participated (
+  driver_id VARCHAR(10),
+  regno VARCHAR(10),
+  report_number INT,
+  damage_amount INT,
+  PRIMARY KEY (driver_id, regno, report_number),
+  FOREIGN KEY (driver_id) REFERENCES Person(driver_id),
+  FOREIGN KEY (regno) REFERENCES Car(regno),
+  FOREIGN KEY (report_number) REFERENCES Accident(report_number)
+);
+
+🅒 Order Processing Database
+🔹 ER Diagram
+Customer —< Order —< Order-item >— Item
+Order — Shipment >— Warehouse
+
+🔹 SQL Schema
+CREATE TABLE Customer (
+  CustNo INT PRIMARY KEY,
+  cname VARCHAR(30),
+  city VARCHAR(30)
+);
+
+CREATE TABLE Orders (
+  OrderNo INT PRIMARY KEY,
+  odate DATE,
+  CustNo INT,
+  order_amt INT,
+  FOREIGN KEY (CustNo) REFERENCES Customer(CustNo)
+);
+
+CREATE TABLE Item (
+  ItemNo INT PRIMARY KEY,
+  unitprice INT
+);
+
+CREATE TABLE OrderItem (
+  OrderNo INT,
+  ItemNo INT,
+  qty INT,
+  PRIMARY KEY (OrderNo, ItemNo),
+  FOREIGN KEY (OrderNo) REFERENCES Orders(OrderNo),
+  FOREIGN KEY (ItemNo) REFERENCES Item(ItemNo)
+);
+
+CREATE TABLE Warehouse (
+  WarehouseNo INT PRIMARY KEY,
+  city VARCHAR(30)
+);
+
+CREATE TABLE Shipment (
+  OrderNo INT,
+  WarehouseNo INT,
+  ship_date DATE,
+  PRIMARY KEY (OrderNo, WarehouseNo),
+  FOREIGN KEY (OrderNo) REFERENCES Orders(OrderNo),
+  FOREIGN KEY (WarehouseNo) REFERENCES Warehouse(WarehouseNo)
+);
+
+🅓 Student Enrollment Database
+🔹 ER Diagram
+Student —< Enroll >— Course
+Course —< Book-Adoption >— Text
+
+🔹 SQL Schema
+CREATE TABLE Student (
+  regno VARCHAR(10) PRIMARY KEY,
+  name VARCHAR(30),
+  major VARCHAR(20),
+  bdate DATE
+);
+
+CREATE TABLE Course (
+  courseNo INT PRIMARY KEY,
+  cname VARCHAR(30),
+  dept VARCHAR(20)
+);
+
+CREATE TABLE Enroll (
+  regno VARCHAR(10),
+  courseNo INT,
+  sem INT,
+  marks INT,
+  PRIMARY KEY (regno, courseNo),
+  FOREIGN KEY (regno) REFERENCES Student(regno),
+  FOREIGN KEY (courseNo) REFERENCES Course(courseNo)
+);
+
+CREATE TABLE Text (
+  book_ISBN INT PRIMARY KEY,
+  book_title VARCHAR(50),
+  publisher VARCHAR(30),
+  author VARCHAR(30)
+);
+
+CREATE TABLE Book_Adoption (
+  courseNo INT,
+  sem INT,
+  book_ISBN INT,
+  PRIMARY KEY (courseNo, sem, book_ISBN),
+  FOREIGN KEY (courseNo) REFERENCES Course(courseNo),
+  FOREIGN KEY (book_ISBN) REFERENCES Text(book_ISBN)
+);
+
+🅔 Company Database
+🔹 ER Diagram
+Employee (works in) —— Department ——< Project
+Employee (works_on) —— Project
+Department ——< Dlocation
+Employee (supervises) Employee
+
+🔹 SQL Schema
+CREATE TABLE Department (
+  DNo INT PRIMARY KEY,
+  DName VARCHAR(30),
+  MgrSSN CHAR(9),
+  MgrStartDate DATE
+);
+
+CREATE TABLE Employee (
+  SSN CHAR(9) PRIMARY KEY,
+  Name VARCHAR(30),
+  Address VARCHAR(50),
+  Sex CHAR(1),
+  Salary DECIMAL(10,2),
+  SuperSSN CHAR(9),
+  DNo INT,
+  FOREIGN KEY (SuperSSN) REFERENCES Employee(SSN),
+  FOREIGN KEY (DNo) REFERENCES Department(DNo)
+);
+
+CREATE TABLE DLocation (
+  DNo INT,
+  DLoc VARCHAR(30),
+  PRIMARY KEY (DNo, DLoc),
+  FOREIGN KEY (DNo) REFERENCES Department(DNo)
+);
+
+CREATE TABLE Project (
+  PNo INT PRIMARY KEY,
+  PName VARCHAR(30),
+  PLocation VARCHAR(30),
+  DNo INT,
+  FOREIGN KEY (DNo) REFERENCES Department(DNo)
+);
+
+CREATE TABLE Works_On (
+  SSN CHAR(9),
+  PNo INT,
+  Hours DECIMAL(5,2),
+  PRIMARY KEY (SSN, PNo),
+  FOREIGN KEY (SSN) REFERENCES Employee(SSN),
+  FOREIGN KEY (PNo) REFERENCES Project(PNo)
+);
+
+💡 Sample ALTERs, DROPs, and DML
+ALTER TABLE Employee ADD COLUMN Bonus DECIMAL(8,2);
+ALTER TABLE Department DROP COLUMN MgrStartDate;
+
+UPDATE Employee SET Salary = Salary * 1.10 WHERE DNo = 10;
+DELETE FROM Works_On WHERE Hours < 5;
