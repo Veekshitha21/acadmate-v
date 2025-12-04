@@ -1359,13 +1359,15 @@ html {
 }
 
 .btn-add {
-  background: var(--gradient-primary);
+  background: var(--accent);
+  color: #ffffff;
   border: 2px solid var(--accent);
 }
 
 .btn-add:hover {
-  background: var(--brown);
-  border-color: var(--brown);
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
   box-shadow: var(--glow-primary);
 }
 
@@ -2199,11 +2201,15 @@ html {
 }
 
 .btn-add {
-  background: linear-gradient(135deg, #f4b30c 0%, #ff8c42 100%);
+  background: var(--accent);
   color: #ffffff;
+  border: 2px solid var(--accent);
 }
 
 .btn-add:hover {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(244, 179, 12, 0.3);
 }
@@ -2393,9 +2399,9 @@ html {
 .btn-toggle-form {
   width: 100%;
   padding: 0.5rem;
-  background: linear-gradient(135deg, #f4b30c 0%, #ff8c42 100%);
+  background: var(--accent);
   color: #ffffff;
-  border: none;
+  border: 2px solid var(--accent);
   border-radius: 6px;
   font-size: 0.7rem;
   font-weight: 600;
@@ -2404,7 +2410,11 @@ html {
   margin-bottom: 0.6rem;
 }
 
-.btn-toggle-form:hover {
+.btn-toggle-form:hover,
+.btn-toggle-form-active {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(244, 179, 12, 0.3);
 }

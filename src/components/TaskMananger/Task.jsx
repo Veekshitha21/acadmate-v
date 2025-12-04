@@ -12,7 +12,7 @@
  * - Responsive design with modern UI elements
  */
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 
 import GradePredictor from './GradePredictor.jsx'
 import AttendanceTracker from './Attendance.jsx'
@@ -20,8 +20,38 @@ import AttendanceTracker from './Attendance.jsx'
 
 
 function Task() {
+  // Initialize state from URL hash or default to 'home'
+  const getInitialPage = () => {
+    const hash = window.location.hash;
+    if (hash.includes('#Task-')) {
+      const page = hash.replace('#Task-', '');
+      if (page === 'grades' || page === 'attendance' || page === 'home') {
+        return page;
+      }
+    } else if (hash === '#TaskManager') {
+      return 'home';
+    }
+    return 'home';
+  };
+
   // State to manage which page is currently being displayed
-  const [currentPage, setCurrentPage] = useState('home')
+  const [currentPage, setCurrentPage] = useState(() => getInitialPage())
+  
+  // Update URL when currentPage changes
+  useEffect(() => {
+    // Don't update URL on initial render
+    if (isInitialMount.current) return;
+    
+    try {
+      if (currentPage === 'home') {
+        window.history.replaceState({ section: 'TaskManager' }, '', '#TaskManager');
+      } else {
+        window.history.replaceState({ section: 'TaskManager' }, '', `#Task-${currentPage}`);
+      }
+    } catch (e) {
+      console.error('Error updating URL:', e);
+    }
+  }, [currentPage]);
   // App.css styles for the main application
   const appCssStyles = `
     :root {
@@ -597,20 +627,79 @@ function Task() {
     }
   }, [])
 
-  // Push history state for internal Task navigation and handle browser back/forward
+  // Track if this is the initial mount
+  const isInitialMount = useRef(true);
+
+  // Initialize history state on mount
   useEffect(() => {
     try {
-      window.history.pushState({ taskPage: currentPage }, '', `#Task-${currentPage}`)
-    } catch {}
+      // Check current hash - if it's #TaskManager, we need to set up the initial state
+      const currentHash = window.location.hash || '';
+      const currentState = window.history.state || {};
+      
+      // Always ensure we have a valid state with section: 'TaskManager'
+      if (currentHash === '#TaskManager' || (!currentHash && !currentState.section)) {
+        // We're coming from main app or initial load - set up Task Manager home
+        window.history.replaceState({ section: 'TaskManager' }, '', '#TaskManager');
+        setCurrentPage('home');
+      } else if (currentHash.includes('#Task-')) {
+        // Already in Task Manager context - just ensure state matches
+        const hashPage = currentHash.replace('#Task-', '');
+        if (hashPage === 'grades' || hashPage === 'attendance' || hashPage === 'home') {
+          // Only update state if needed
+          setCurrentPage(hashPage);
+        }
+      }
+      
+      // Mark initial mount as complete
+      isInitialMount.current = false;
+    } catch (e) {
+      console.error('Error initializing history state:', e);
+    }
+  }, [])
+
+  // Handle internal navigation within Task Manager
+  useEffect(() => {
+    // Skip on initial mount
+    if (isInitialMount.current) return;
+    
+    try {
+      // Only update URL if it doesn't already match
+      const currentHash = window.location.hash || '';
+      const expectedHash = currentPage === 'home' ? '#TaskManager' : `#Task-${currentPage}`;
+      
+      if (currentHash !== expectedHash) {
+        window.history.replaceState({ section: 'TaskManager' }, '', expectedHash);
+      }
+    } catch (e) {
+      console.error('Error updating navigation state:', e);
+    }
   }, [currentPage])
 
+  // Handle browser back/forward navigation
   useEffect(() => {
-    const onPopTask = (e) => {
-      const page = (e.state && e.state.taskPage) || 'home'
-      setCurrentPage(page)
-    }
-    window.addEventListener('popstate', onPopTask)
-    return () => window.removeEventListener('popstate', onPopTask)
+    const onPopState = (e) => {
+      const hash = window.location.hash || '';
+      const state = e.state || {};
+      
+      // If we're navigating to a non-TaskManager section, let App.jsx handle it
+      if (state.section && state.section !== 'TaskManager') {
+        return;
+      }
+      
+      // Handle Task Manager internal navigation
+      if (hash === '#TaskManager' || hash === '') {
+        setCurrentPage('home');
+      } else if (hash.includes('#Task-')) {
+        const hashPage = hash.replace('#Task-', '');
+        if (['grades', 'attendance', 'home'].includes(hashPage)) {
+          setCurrentPage(hashPage);
+        }
+      }
+    };
+    
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
   }, [])
 
   /**

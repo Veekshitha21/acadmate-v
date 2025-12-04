@@ -10,7 +10,7 @@ const CalendarView = () => {
 
   // Load data from localStorage on mount
   useEffect(() => {
-    const savedData = localStorage.getItem('attendanceTrackerData');
+    const savedData = localStorage.getItem('attendanceData');
     if (savedData) {
       const parsed = JSON.parse(savedData);
       setSubjects(parsed.subjects || []);

@@ -420,14 +420,6 @@ const GradePredictor = ({ onBack }) => {
       <div className="grade-header">
         <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
           <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-start', minWidth: '56px' }}>
-            <button
-              className="back-arrow-btn"
-              onClick={onBack}
-              title="Go Back"
-              style={{ position: 'static', display: 'flex' }}
-            >
-              ←
-            </button>
           </div>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', paddingLeft: '8px' }}>
             <img
