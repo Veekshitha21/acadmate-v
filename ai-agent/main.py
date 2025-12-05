@@ -23,7 +23,7 @@ from langchain_groq import ChatGroq
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
-from langchain.schema.document import Document
+from langchain_core.documents import Document
 
 # 3. RAG PIPELINE: Advanced RAG with Pinecone
 from rag_pipeline import EnhancedRAGPipeline
@@ -169,4 +169,21 @@ async def rag_endpoint(request: RAGQuery):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-print("--- ✅ Server is ready. Access endpoints at /crow, /falcon, /rag ---")
+@app.post("/ask", response_model=RAGResponse, summary="Unified ask endpoint (routes to RAG)")
+async def ask_endpoint(request: RAGQuery):
+    """
+    Unified endpoint that routes to the appropriate AI system.
+    Currently routes to the advanced RAG Pipeline (Pinecone).
+    """
+    if not pinecone_rag_pipeline:
+        raise HTTPException(status_code=503, detail="Advanced RAG Pipeline (Pinecone) is not available. Check server logs.")
+    try:
+        result = pinecone_rag_pipeline.query_rag(
+            user_query=request.question,
+            marks=request.marks
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+print("--- ✅ Server is ready. Access endpoints at /crow, /falcon, /rag, /ask ---")
