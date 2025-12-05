@@ -83,10 +83,19 @@ const Calendar = ({ onBack }) => {
   }
 
   const addEvent = () => {
-    if (newEvent.title && newEvent.date) {
-      setEvents([...events, { id: Date.now(), ...newEvent, isCollege: false }])
-      setNewEvent({ title: '', date: '', type: 'event' })
+    if (!newEvent.title || !newEvent.date) return;
+
+    // Disallow past dates
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const eventDate = new Date(`${newEvent.date}T00:00:00`);
+    if (eventDate < today) {
+      alert('Please select today or a future date.');
+      return;
     }
+
+    setEvents([...events, { id: Date.now(), ...newEvent, isCollege: false }]);
+    setNewEvent({ title: '', date: '', type: 'event' });
   }
 
   // Delete event manually
