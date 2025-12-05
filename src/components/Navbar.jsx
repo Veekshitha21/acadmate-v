@@ -15,13 +15,13 @@ export default function Navbar({ isLoggedIn, onLogin, onShowProfile, onLogout, a
   ];
 
   const handleNavClick = (item) => {
-    // Navigate to the section - authentication will be handled by ProtectedRoute
     onSectionChange(item.name);
     setIsMobileMenuOpen(false);
   };
 
   return (
-    <nav className="bg-white shadow-md sticky top-0 z-50">
+    // CHANGE IS HERE: 'sticky' -> 'fixed w-full'
+    <nav className="bg-white shadow-md fixed top-0 w-full z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
