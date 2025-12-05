@@ -63,21 +63,36 @@ const Dashboard = ({ user, onLogout, onNavigate }) => {
                   {materialTypes.map(material => {
                     const handleClick = () => {
                       if (material.id === 'syllabus') {
-                        // Syllabus link opens in new tab
                         window.open('https://drive.google.com/file/d/1MCHK2uif5hiptlESsN6Ta6XQvYY3tEuS/view?usp=sharing', '_blank');
-                      } else if (material.id === 'pyqs') {
-                        // PYQs link goes directly to the PDF list page
-                        onNavigate('pdfList', { 
-                          cycle: cycle.id, 
-                          type: material.id, 
-                          subjectId: 'all' 
-                        });
                       } else {
-                        // Textbook and Notes links go to the subject selection page
-                        onNavigate('subjects', { 
-                          cycle: cycle.id, 
-                          type: material.id 
-                        });
+                        
+                        // --- FIX: STRUCTURED URL ---
+                        // We put the details in the URL: /subjects/physics/textbook
+                        // This allows the back button to know exactly where we were.
+                        const newHash = `#StudyMaterials/subjects/${cycle.id}/${material.id}`;
+                        
+                        window.history.pushState(
+                          { section: 'Study Materials' }, 
+                          '', 
+                          newHash 
+                        );
+
+                        if (material.id === 'pyqs') {
+                          // PYQs often go straight to list, so we map that differently
+                          const pyqHash = `#StudyMaterials/pdfList/${cycle.id}/${material.id}/all`;
+                          window.history.replaceState({ section: 'Study Materials' }, '', pyqHash);
+                          
+                          onNavigate('pdfList', { 
+                            cycle: cycle.id, 
+                            type: material.id, 
+                            subjectId: 'all' 
+                          });
+                        } else {
+                          onNavigate('subjects', { 
+                            cycle: cycle.id, 
+                            type: material.id 
+                          });
+                        }
                       }
                     };
 

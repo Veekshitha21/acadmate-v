@@ -1,10 +1,9 @@
 import React from 'react';
-import { data } from './data'; // 1. Import the new central data source
+import { data } from './data';
 import './Subjects.css'; 
 
 const Subjects = ({ user, onLogout, cycle, type, onNavigate, onBack }) => {
 
-  // 2. Get the subject list from our imported data
   const currentCycle = data[cycle];
 
   const typeLabels = {
@@ -13,8 +12,8 @@ const Subjects = ({ user, onLogout, cycle, type, onNavigate, onBack }) => {
     pyqs: 'Previous Year Questions'
   };
   const typeIcons = { textbook: '📚', notes: '📝', pyqs: '📄' };
-  const typeLabel = typeLabels[type];
-  const typeIcon = typeIcons[type];
+  const typeLabel = typeLabels[type] || type;
+  const typeIcon = typeIcons[type] || '📂';
 
   if (!currentCycle) {
     return <div>Cycle not found</div>;
@@ -22,37 +21,36 @@ const Subjects = ({ user, onLogout, cycle, type, onNavigate, onBack }) => {
 
   return (
     <div className="subjects-page">
-      {/* <header className="nav-header">
-        <div className="container">
-          <div className="nav-content">
-            <h1 className="nav-title">Student Portal</h1>
-            <div className="nav-actions">
-              <span className="user-name">Hello, {user.username}</span>
-              <Link to="/dashboard" className="btn btn-secondary">Dashboard</Link>
-              <button onClick={onLogout} className="btn btn-logout">Logout</button>
-            </div>
-          </div>
-        </div>
-      </header> */}
       <main className="subjects-main">
         <div className="container">
           <div className="page-header">
-            {/* <Link to="/dashboard" className="back-btn">← Back to Dashboard</Link> */}
             <div className="page-title">
               <span className="type-icon">{typeIcon}</span>
               <h2>{typeLabel} - {currentCycle.title}</h2>
             </div>
-            <p>Select a subject to view available {type.toLowerCase()}</p>
+            <p>Select a subject to view available {type}</p>
           </div>
           <div className="subjects-grid">
             {currentCycle.subjects.map(subject => (
               <button
                 key={subject.id}
-                onClick={() => onNavigate('pdfList', { 
-                  cycle: cycle, 
-                  type: type, 
-                  subjectId: subject.id 
-                })}
+                onClick={() => {
+                   // --- FIX: PUSH STATE ON CLICK ---
+                   // Create a unique URL for this specific subject's PDF list
+                   // Format: #StudyMaterials/pdfList/<cycle>/<type>/<subjectId>
+                   const newHash = `#StudyMaterials/pdfList/${cycle}/${type}/${subject.id}`;
+                   window.history.pushState(
+                     { section: 'Study Materials' }, 
+                     '', 
+                     newHash
+                   );
+
+                  onNavigate('pdfList', { 
+                    cycle: cycle, 
+                    type: type, 
+                    subjectId: subject.id 
+                  });
+                }}
                 className="subject-card"
               >
                 <div className="subject-icon">{subject.icon}</div>

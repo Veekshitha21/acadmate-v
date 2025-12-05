@@ -1,6 +1,6 @@
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
   ? 'https://your-backend-domain.com/api' 
-  : 'http://localhost:5000/api';
+  : 'http://localhost:5001/api';
 
 class ApiService {
   static async request(endpoint, options = {}) {
