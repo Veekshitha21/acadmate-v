@@ -22,6 +22,23 @@ const ChatbotHub = () => {
   const prevMessagesLengthRef = useRef(0);
   const isSendingRef = useRef(false);
 
+  // Measure navbar height at runtime and publish as CSS variable so landing can offset itself
+  useEffect(() => {
+    const setNavHeight = () => {
+      try {
+        const nav = document.querySelector('nav');
+        const h = nav ? nav.offsetHeight : 64;
+        document.documentElement.style.setProperty('--navbar-height', `${h}px`);
+      } catch (e) {
+        // ignore
+      }
+    };
+
+    setNavHeight();
+    window.addEventListener('resize', setNavHeight);
+    return () => window.removeEventListener('resize', setNavHeight);
+  }, []);
+
   const sendMessage = () => {
     if (!input.trim()) return;
     if (isSendingRef.current) return; // Prevent double-send from Strict Mode
@@ -122,10 +139,19 @@ const ChatbotHub = () => {
     try {
       if (activeMode === "eduboat") {
         requestAnimationFrame(() => {
-          if (eduboatRef.current) {
-            eduboatRef.current.scrollIntoView({ behavior: "auto", block: "start" });
-          } else {
-            window.scrollTo({ top: 0, behavior: "auto" });
+          try {
+            if (eduboatRef.current) {
+              // compute navbar height and scroll so the eduboat container sits below it
+              const nav = document.querySelector('nav');
+              const navHeight = nav ? nav.offsetHeight : 0;
+              const extraGap = 8; // small buffer
+              const topY = eduboatRef.current.getBoundingClientRect().top + window.scrollY - navHeight - extraGap;
+              window.scrollTo({ top: Math.max(0, Math.round(topY)), behavior: 'auto' });
+            } else {
+              window.scrollTo({ top: 0, behavior: 'auto' });
+            }
+          } catch (e) {
+            try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch {}
           }
         });
       }

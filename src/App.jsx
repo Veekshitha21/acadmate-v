@@ -33,6 +33,19 @@ function App() {
   const [pendingSection, setPendingSection] = useState(null);
   const isNavigatingFromBrowser = React.useRef(false);
 
+    // When navigating to the Chatbot section, ensure the page is at the top
+    useEffect(() => {
+      if (activeSection === 'Chatbot') {
+        try {
+          // Disable automatic scroll restoration if available and jump to top
+          if ('scrollRestoration' in window.history) {
+            window.history.scrollRestoration = 'manual';
+          }
+          window.scrollTo({ top: 0, behavior: 'auto' });
+        } catch {}
+      }
+    }, [activeSection]);
+
   const protectedSections = new Set([
     'Seniors',
     'TaskManager',

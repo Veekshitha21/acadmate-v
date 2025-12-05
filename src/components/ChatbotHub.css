@@ -939,6 +939,13 @@
     padding: 1rem 0.75rem;
   }
 
+/* Ensure EduBoat landing isn't hidden beneath the sticky navbar when scrolled into view */
+.eduboat-container {
+  /* reserve space equal to navbar height + a small gap (uses --navbar-height set at runtime) */
+  scroll-margin-top: calc(var(--navbar-height, 120px) + 8px);
+  padding-top: 2rem; /* ensure heading has breathing room under the navbar */
+}
+
   .card-section {
     grid-template-columns: 1fr; /* stack cards vertically on very small screens */
     gap: 1rem;

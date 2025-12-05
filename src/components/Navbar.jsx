@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Menu, X, User, BookOpen } from 'lucide-react';
 
 export default function Navbar({ isLoggedIn, onLogin, onShowProfile, onLogout, activeSection, onSectionChange }) {
