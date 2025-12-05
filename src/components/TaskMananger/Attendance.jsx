@@ -185,14 +185,6 @@ const AttendanceTracker = ({ onBack }) => {
         <div className="grade-header" style={{ width: 'min(1100px, 92vw)', margin: '0 auto 1.5rem', padding: '1rem 2rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
             <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-start', minWidth: '56px' }}>
-              <button
-                className="back-arrow-btn"
-                onClick={() => (onBack ? onBack() : window.history.back())}
-                title="Go Back"
-                style={{ position: 'static', display: 'flex', width: 40, height: 40, marginRight: 8 }}
-              >
-                ←
-              </button>
             </div>
             <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', paddingLeft: '8px', minWidth: 0 }}>
               <img src={'/attend.jpg'} alt="Attendance" className="title-logo" style={{ marginLeft: 8 }} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/attend.jpg'; }} />
@@ -344,7 +336,7 @@ const AttendanceTracker = ({ onBack }) => {
                   <span className="stat-item">Extra Classes: {subject.sessions.filter(s => s.isExtra).length}</span>
                 </div>
 
-                <button className="btn-toggle-form" onClick={() => toggleAttendanceForm(subject.id)}>
+                <button className={`btn-toggle-form ${subject.showAttendanceForm ? 'btn-toggle-form-active' : ''}`} onClick={() => toggleAttendanceForm(subject.id)}>
                   {subject.showAttendanceForm ? '▲ Hide Attendance Form' : '▼ Mark Attendance'}
                 </button>
 

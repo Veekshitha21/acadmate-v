@@ -7,7 +7,7 @@ import { ExamPrepCard } from "./ExamPrep";
 const ChatbotHub = () => {
   const [activeMode, setActiveMode] = useState("eduboat");
   const [messages, setMessages] = useState({
-    quickhelp: [{ type: "bot", text: "Welcome to QuickHelp!! Get instant explanations ⚡" }],
+    quickhelp: [{ type: "bot", text: "Welcome to QuickHelp! Get instant explanations ⚡" }],
     examprep: [{ type: "bot", text: "Welcome to ExamPrep! Get exam-ready answers ✍️" }],
     deepdive: [{ type: "bot", text: "Welcome to DeepDive! Explore concepts thoroughly 🌊" }]
   });
@@ -20,70 +20,54 @@ const ChatbotHub = () => {
   const sendMessage = () => {
     if (!input.trim()) return;
 
-    // Add user message with marks info for examprep
+    const messageToSend = input;
     const userMessage = activeMode === "examprep"
-      ? `${input} (${selectedMarks} marks)`
-      : input;
+      ? `${messageToSend} (${selectedMarks} marks)`
+      : messageToSend;
 
-    // append the user's message to the conversation immediately
     setMessages(prev => ({
       ...prev,
-      [activeMode]: [...(prev[activeMode] || []), { type: 'user', text: userMessage }]
+      [activeMode]: [...(prev[activeMode] || []), { type: 'user', text: userMessage }],
     }));
-
-    // clear the input so it doesn't keep the typed text after sending
-    setInput("");
-    // close marks dropdown when a message is sent
+    setInput('');
     setShowMarksDropdown(false);
-
     setIsTyping(true);
 
-const endpoint = "http://127.0.0.1:8000/ask"; // your FastAPI server URL
+    const endpoint = "http://127.0.0.1:8000/ask"; // your FastAPI server URL
+    const payload = {
+      question: messageToSend,
+      marks: activeMode === "examprep" ? selectedMarks : 5,
+    };
 
-const payload = {
-  question: input,
-  marks: activeMode === "examprep" ? selectedMarks : 5,
-};
+    fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || "Error from server");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setMessages((prev) => ({
+          ...prev,
+          [activeMode]: [...prev[activeMode], { type: "bot", text: data.answer }],
+        }));
+      })
+      .catch((error) => {
+        setMessages((prev) => ({
+          ...prev,
+          [activeMode]: [
+            ...prev[activeMode],
+            { type: "bot", text:  `Error: ${error.message}` },
+          ],
+        }));
+      })
+      .finally(() => setIsTyping(false));
 
-fetch(endpoint, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(payload),
-})
-  .then(async (res) => {
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || "Error from server");
-    }
-    return res.json();
-  })
-  .then((data) => {
-    setMessages((prev) => ({
-      ...prev,
-      [activeMode]: [...prev[activeMode], { type: "bot", text: data.answer }],
-    }));
-  })
-  .catch((error) => {
-    setMessages((prev) => ({
-      ...prev,
-      [activeMode]: [
-        ...prev[activeMode],
-        { type: "bot", text:  `Error: ${error.message}` },
-      ],
-    }));
-  })
-  .finally(() => setIsTyping(false));
-
-    // Integrate your unified ChatbotHub AI API here based on `activeMode`:
-    // Example structure (replace setTimeout with real calls):
-    // const endpoint = activeMode === "quickhelp" ? "/api/quickhelp" : activeMode === "examprep" ? "/api/examprep" : "/api/deepdive";
-    // fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: input }) })
-    //   .then(res => res.json())
-    //   .then(data => setMessages(prev => ({ ...prev, [activeMode]: [...prev[activeMode], { type: "bot", text: data.answer }] })))
-    //   .catch(() => setMessages(prev => ({ ...prev, [activeMode]: [...prev[activeMode], { type: "bot", text: "Sorry, something went wrong." }] })))
-    //   .finally(() => setIsTyping(false));
-
-    // Simulated bot response (remove when API is wired)
     setTimeout(() => {
       let response = "";
       if (activeMode === "quickhelp") response = "Quick explanation: " + input;
@@ -98,10 +82,17 @@ fetch(endpoint, {
     }, 800);
   };
 
+  // Navigate between modes
+  const navigateToMode = (mode) => {
+    setActiveMode(mode);
+    try {
+      const hash = `#Chatbot-${mode}`;
+      window.history.pushState({ section: 'Chatbot', chatbotMode: mode }, '', hash);
+    } catch {}
+  };
+
   const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      sendMessage();
-    }
+    if (e.key === "Enter") sendMessage();
   };
 
   // Scroll to bottom when messages change
@@ -111,23 +102,19 @@ fetch(endpoint, {
     }
   }, [messages, isTyping, activeMode]);
 
-  // Close dropdown when clicking outside
+  // Close marks dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (showMarksDropdown && !event.target.closest('.marks-selection-container')) {
         setShowMarksDropdown(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showMarksDropdown]);
 
   // Handle browser/back navigation for Chatbot modes
   useEffect(() => {
-    // When ChatbotHub mounts, if the hash encodes a sub-mode (e.g. #Chatbot-examprep), set it
     const parseHashMode = () => {
       try {
         const h = (window.location.hash || '').replace('#', '');
@@ -135,27 +122,15 @@ fetch(endpoint, {
       } catch {}
       return null;
     };
-
     const initialMode = parseHashMode();
-    if (initialMode) {
-      setActiveMode(initialMode);
-      try { window.history.replaceState({ section: 'Chatbot', chatbotMode: initialMode }, '', window.location.hash || `#Chatbot-${initialMode}`); } catch {}
-    } else {
-      // ensure there's at least a Chatbot state so push/pop behave predictably
-      try { window.history.replaceState({ section: 'Chatbot' }, '', window.location.hash || '#Chatbot'); } catch {}
-    }
+    if (initialMode) setActiveMode(initialMode);
+    window.history.replaceState({ section: 'Chatbot' }, '', window.location.hash || '#Chatbot');
 
     const onPop = (e) => {
-      const state = (e.state || {});
-      // If popstate includes a chatbotMode key, use it. If not (or null), go to eduboat.
-      if (state && state.section === 'Chatbot') {
-        if (state.chatbotMode) setActiveMode(state.chatbotMode);
-        else setActiveMode('eduboat');
-        return;
+      const state = e.state || {};
+      if (state.section === 'Chatbot') {
+        setActiveMode(state.chatbotMode || 'eduboat');
       }
-
-      // If popstate moved away from Chatbot entirely, keep App's behavior (App will change activeSection)
-      // but also ensure the internal mode resets when Chatbot is shown again.
     };
 
     window.addEventListener('popstate', onPop);
@@ -166,7 +141,6 @@ fetch(endpoint, {
   useEffect(() => {
     if (activeMode === "eduboat") {
       const reveals = document.querySelectorAll(".reveal");
-
       const handleScroll = () => {
         for (let i = 0; i < reveals.length; i++) {
           const windowHeight = window.innerHeight;
@@ -180,67 +154,56 @@ fetch(endpoint, {
           }
         }
       };
-
       window.addEventListener("scroll", handleScroll);
-      handleScroll(); // run once on mount
-
+      handleScroll();
       return () => window.removeEventListener("scroll", handleScroll);
     }
   }, [activeMode]);
 
-  // Get the appropriate gradient and styling based on active mode
+  // Get styling for each mode
   const getModeConfig = () => {
     switch (activeMode) {
       case "quickhelp":
-        return {
-          name: "⚡ QuickHelp",
-          gradient: "linear-gradient(135deg, #a18cd1, #fbc2eb)",
-          userGradient: "linear-gradient(135deg, #42a5f5, #1e88e5)"
-        };
+        return { name: "⚡ QuickHelp", gradient: "linear-gradient(135deg, #a18cd1, #fbc2eb)", userGradient: "linear-gradient(135deg, #42a5f5, #1e88e5)" };
       case "examprep":
-        return {
-          name: "📘 ExamPrep",
-          gradient: "linear-gradient(135deg, #667eea, #5a67f2)",
-          userGradient: "linear-gradient(135deg, #667eea, #5a67f2)"
-        };
+        return { name: "📘 ExamPrep", gradient: "linear-gradient(135deg, #667eea, #5a67f2)", userGradient: "linear-gradient(135deg, #667eea, #5a67f2)" };
       case "deepdive":
-        return {
-          name: "🔍 DeepDive",
-          gradient: "linear-gradient(135deg, #ff7e5f, #feb47b)",
-          userGradient: "linear-gradient(135deg, #667eea, #5a67f2)"
-        };
+        return { name: "🔍 DeepDive", gradient: "linear-gradient(135deg, #ff7e5f, #feb47b)", userGradient: "linear-gradient(135deg, #667eea, #5a67f2)" };
       default:
-        return {
-          name: "🚢 EduBoat",
-          gradient: "linear-gradient(135deg, #4facfe, #00f2fe)",
-          userGradient: "linear-gradient(135deg, #42a5f5, #1e88e5)"
-        };
+        return { name: "🚢 EduBoat", gradient: "linear-gradient(135deg, #4facfe, #00f2fe)", userGradient: "linear-gradient(135deg, #42a5f5, #1e88e5)" };
     }
   };
 
   const modeConfig = getModeConfig();
   const currentMessages = messages[activeMode] || [];
 
-  // Helper to navigate to a sub-mode inside Chatbot and push history state
-  const navigateToMode = (mode) => {
-    setActiveMode(mode);
-    try {
-      const hash = `#Chatbot-${mode}`;
-      window.history.pushState({ section: 'Chatbot', chatbotMode: mode }, '', hash);
-    } catch {}
+  // Escape HTML
+  const escapeHtml = (str) =>
+    str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  // Render simple Markdown safely
+  const renderMarkdown = (text) => {
+    if (!text) return '';
+    let escaped = escapeHtml(text);
+    // inline code
+    escaped = escaped.replace(/`([^`]+)`/g, '<code>$1</code>');
+    // bold
+    escaped = escaped.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    // italic
+    escaped = escaped.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    // line breaks
+    escaped = escaped.replace(/\n/g, '<br>');
+    return escaped;
   };
 
-  // If we're in EduBoat mode, show the card interface
+  // EduBoat cards
   if (activeMode === "eduboat") {
     return (
       <div className="eduboat-container">
-        {/* Header */}
         <header className="header reveal">
           <h1>AcadBoat</h1>
           <p className="subtitle">Study made simple with smart support.</p>
         </header>
-
-        {/* Cards */}
         <div className="card-section">
           <div className="reveal" onClick={() => navigateToMode("quickhelp")} style={{ cursor: "pointer" }}>
             <QuickHelpCard />
@@ -252,19 +215,14 @@ fetch(endpoint, {
             <ExamPrepCard />
           </div>
         </div>
-
-        {/* Footer */}
-        <footer className="footer reveal">
-          ✨ Happy learning!
-        </footer>
+        <footer className="footer reveal">✨ Happy learning!</footer>
       </div>
     );
   }
 
-  // If we're in a specific chatbot mode, show the chat interface
+  // Chat interface
   return (
     <div className="chatbot-hub">
-      {/* Header */}
       <header className="chatbot-header">
         <h1>{modeConfig.name}</h1>
         <p className="chatbot-subtitle">
@@ -274,15 +232,13 @@ fetch(endpoint, {
         </p>
       </header>
 
-      {/* Chat Area */}
       <div className="chatbox">
         <div ref={chatboxRef} className="messages-container">
           {currentMessages.map((msg, index) => (
-            <div
-              key={index}
-              className={`message ${msg.type}`}
-            >
-              {msg.text}
+            <div key={index} className={`message ${msg.type}`}>
+              {msg.type === 'bot' ? (
+                <div className="bot-content" dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.text) }} />
+              ) : msg.text}
             </div>
           ))}
 
@@ -298,40 +254,26 @@ fetch(endpoint, {
           )}
         </div>
 
-        {/* Input Area */}
         <div className="input-area">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            onKeyDown={handleKeyPress}
             placeholder="Type your question..."
             className="message-input"
           />
 
-          {/* Marks Selection - Only show for examprep */}
           {activeMode === "examprep" && (
             <div className="marks-selection-container">
-              <button
-                onClick={() => setShowMarksDropdown(!showMarksDropdown)}
-                className="marks-button"
-                title="Select marks"
-              >
+              <button onClick={() => setShowMarksDropdown(!showMarksDropdown)} className="marks-button" title="Select marks">
                 {selectedMarks} marks
               </button>
-
               {showMarksDropdown && (
                 <div className="marks-dropdown">
-                  {[2, 3, 4, 5, 6, 7, 8, 10].map(marks => (
-                    <button
-                      key={marks}
-                      onClick={() => {
-                        setSelectedMarks(marks);
-                        setShowMarksDropdown(false);
-                      }}
-                      className={`marks-option ${selectedMarks === marks ? 'selected' : ''}`}
-                    >
-                      {marks} marks
+                  {[2, 3, 4, 5, 6, 7, 8, 10].map(m => (
+                    <button key={m} onClick={() => { setSelectedMarks(m); setShowMarksDropdown(false); }} className={`marks-option ${selectedMarks === m ? 'selected' : ''}`}>
+                      {m} marks
                     </button>
                   ))}
                 </div>
@@ -339,12 +281,7 @@ fetch(endpoint, {
             </div>
           )}
 
-          <button
-            onClick={sendMessage}
-            className="send-button"
-          >
-            Send
-          </button>
+          <button onClick={sendMessage} className="send-button">Send</button>
         </div>
       </div>
     </div>
