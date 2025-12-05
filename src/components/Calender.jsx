@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import axios from 'axios'
 import './Calendar.css'
 
 const Calendar = ({ onBack }) => {
@@ -7,7 +8,8 @@ const Calendar = ({ onBack }) => {
     { id: 2, title: 'Mid-term Exams', date: '2025-02-20', type: 'exam', isCollege: true },
     { id: 3, title: 'Sports Day', date: '2025-02-28', type: 'event', isCollege: true }
   ])
-  
+
+  const [user, setUser] = useState(null)
   const [newEvent, setNewEvent] = useState({ title: '', date: '', type: 'event' })
   const [notification, setNotification] = useState('')
   const [currentMonth, setCurrentMonth] = useState(new Date())
@@ -75,6 +77,10 @@ const Calendar = ({ onBack }) => {
       setTimeout(() => setNotification(''), 5000)
     }
   }, [events])
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') addEvent()
+  }
 
   const addEvent = () => {
     if (newEvent.title && newEvent.date) {
