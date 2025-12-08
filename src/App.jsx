@@ -7,33 +7,119 @@ import LoginModal from './components/LoginModal';
 import Profile from './components/Profile';
 import SeniorsPage from './components/SeniorsPage.jsx';
 import CalendarPage from './components/CalendarPage.jsx';
-import Task from './components/TaskMananger/Task.jsx'; // Task Manager with Grade & Attendance
-import ChatbotHub from './components/ChatbotHub.jsx'; // Integrated Chatbot Hub
-import StudyMaterials from './components/StudyMaterials.jsx'; // Study Materials System
+import Task from './components/TaskMananger/Task.jsx';
+import ChatbotHub from './components/ChatbotHub.jsx';
+import StudyMaterials from './components/StudyMaterials.jsx';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
-  const [activeSection, setActiveSection] = useState(() => {
-    // Initialize from history state -> location.hash -> default 'Home'
-    try {
-      const stateSection = window.history.state && window.history.state.section;
-      if (stateSection) return stateSection;
-    } catch {}
-    const rawHash = window.location.hash || '';
-    if (rawHash.startsWith('#Task-')) {
-      return 'TaskManager';
-    }
-    const hash = rawHash.replace('#', '');
-    return hash || 'Home';
-  });
+  const [activeSection, setActiveSection] = useState('Home');
+  const [componentKey, setComponentKey] = useState(0); 
+
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
-  // Flag to prevent pushing history during browser navigation
   const isNavigatingFromBrowser = React.useRef(false);
 
-  // Team members
+  const hashToSectionMap = {
+    'Home': 'Home',
+    'Seniors': 'Seniors',
+    'TaskManager': 'TaskManager',
+    'EventBuddy': 'EventBuddy',
+    'Chatbot': 'Chatbot',
+    'StudyMaterials': 'Study Materials',
+    'AboutUs': 'About Us',
+    'Profile': 'Profile'
+  };
+
+  const getSectionFromUrl = useCallback((e = null) => {
+    const hash = window.location.hash || '';
+    if (hash.startsWith('#Task-')) return 'TaskManager';
+
+    // FIX: Only look at the part before the first slash
+    const cleanHash = hash.replace('#', '').split('/')[0].trim();
+
+    if (cleanHash && cleanHash !== 'TaskManager') {
+      const recognizedSections = Object.keys(hashToSectionMap);
+      const isRecognizedSection = recognizedSections.some(s => cleanHash === s || cleanHash === s.replace(/\s+/g, ''));
+      if (isRecognizedSection) {
+         return hashToSectionMap[cleanHash] || cleanHash;
+      }
+    }
+    return 'Home';
+  }, []);
+
+  useEffect(() => {
+    const section = getSectionFromUrl();
+    setActiveSection(section);
+  }, [getSectionFromUrl]);
+
+
+  useEffect(() => {
+    const onPopState = (e) => {
+      isNavigatingFromBrowser.current = true;
+      const section = getSectionFromUrl(e);
+      
+      // FIX: Only force-reset Study Materials if we are at the ROOT of Study Materials
+      // If the URL is #StudyMaterials/subjects/..., we let StudyMaterials.jsx handle it.
+      if (section === 'Study Materials' && !window.location.hash.includes('/')) {
+        setComponentKey(prev => prev + 1);
+      }
+
+      handleSectionChangeInternal(section, true);
+      setTimeout(() => { isNavigatingFromBrowser.current = false; }, 100);
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [getSectionFromUrl]);
+
+  const handleSectionChangeInternal = (section, isFromBrowser = false) => {
+    if (section === 'Profile' && !isLoggedIn) {
+      setActiveSection('Home');
+      setShowProfile(false);
+      if (!isFromBrowser) window.history.replaceState({ section: 'Home' }, '', '#Home');
+      return;
+    }
+
+    if (section === 'Profile') setShowProfile(true);
+    else setShowProfile(false);
+    
+    setActiveSection(section);
+
+    if (!isFromBrowser) {
+      const hash = `#${section.replace(/\s+/g, '')}`;
+      try { 
+        if (window.location.hash.split('/')[0] !== hash) {
+          window.history.pushState({ section }, '', hash);
+        }
+      } catch (e) { console.error(e); }
+    }
+  };
+
+  const handleSectionChange = (section) => {
+    if (section === activeSection) return;
+    handleSectionChangeInternal(section, false);
+  };
+
+  const handleLogin = (data) => {
+    setUserData(data);
+    setIsLoggedIn(true);
+    setIsLoginModalOpen(false);
+    setShowProfile(false);
+    handleSectionChange('Home');
+  };
+  const handleShowProfile = () => { handleSectionChange('Profile'); };
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setUserData(null);
+    setShowProfile(false);
+    handleSectionChange('Home');
+  };
+  const handleBackToHome = () => { handleSectionChange('Home'); };
+
+  // Team Data (Abbreviated for brevity, keep your original list)
   const teamMembers = [
     { name: 'Bhaskara', linkedin: 'https://www.linkedin.com/in/bhaskara-88aa76322/', github: 'https://github.com/bhaskara05' },
     { name: 'Khushal L', linkedin: 'https://linkedin.com/khushal-l', github: 'https://github.com/Khushal1513' },
@@ -46,9 +132,7 @@ function App() {
     { name: 'Dileep', linkedin: 'https://www.linkedin.com/in/dileep-shivakumar-b577982b2/', github: 'https://github.com/Dileep-S-S' }
   ];
 
-  // Utilities
-  const nameToSlug = (fullName) =>
-    fullName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const nameToSlug = (fullName) => fullName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   const sanitizeUrl = (url) => (url ? url.trim() : '#');
   const ensureHttps = (raw) => {
     const s = sanitizeUrl(raw);
@@ -69,304 +153,10 @@ function App() {
     }
   };
 
-  // Handlers
-  const handleLogin = (data) => {
-    setUserData(data);
-    setIsLoggedIn(true);
-    setIsLoginModalOpen(false);
-    setShowProfile(false);
-    setActiveSection('Home');
-    try { window.history.pushState({ section: 'Home' }, '', '#Home'); } catch {}
-  };
-  const handleShowProfile = () => {
-    setShowProfile(true);
-    setActiveSection('Profile');
-    try { window.history.pushState({ section: 'Profile' }, '', '#Profile'); } catch {}
-  };
-  const handleBackToHome = () => {
-    setShowProfile(false);
-    setActiveSection('Home');
-    try { window.history.pushState({ section: 'Home' }, '', '#Home'); } catch {}
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUserData(null);
-    setShowProfile(false);
-    setActiveSection('Home');
-    try { window.history.pushState({ section: 'Home' }, '', '#Home'); } catch {}
-  };
-
-  const handleSectionChange = (section) => {
-    // Don't push history if we're already on this section (prevents duplicate entries)
-    if (section === activeSection) {
-      return;
-    }
-    
-    // Don't push history if we're currently handling browser navigation
-    if (isNavigatingFromBrowser.current) {
-      // Just update the state without pushing history
-      if (section !== 'Profile') {
-        setShowProfile(false);
-      }
-      setActiveSection(section);
-      return;
-    }
-    
-    // Reset showProfile when navigating to any section other than Profile
-    if (section !== 'Profile') {
-      setShowProfile(false);
-    }
-    setActiveSection(section);
-    // Push into browser history so back/forward works
-    const hash = `#${section.replace(/\s+/g, '')}`;
-    try { 
-      window.history.pushState({ section }, '', hash); 
-      
-      // If navigating to TaskManager, the Task component will handle its own internal state
-      // But we need to ensure the transition state is properly set
-      // Don't interfere here - let Task component handle its initialization
-    } catch (e) {
-      console.error('Error pushing state:', e);
-    }
-  };
-
-  // Map hash values back to section names (handle spaces that were removed)
-  const hashToSectionMap = {
-    'Home': 'Home',
-    'Seniors': 'Seniors',
-    'TaskManager': 'TaskManager',
-    'EventBuddy': 'EventBuddy',
-    'Chatbot': 'Chatbot',
-    'StudyMaterials': 'Study Materials',
-    'AboutUs': 'About Us',
-    'Profile': 'Profile'
-  };
-
-  // Helper function to extract section from hash or state
-  const getSectionFromUrl = useCallback((e = null) => {
-    const hash = window.location.hash || '';
-    const isTaskRoute = hash.startsWith('#Task-');
-
-    // If it's a Task route, always return TaskManager
-    if (isTaskRoute) {
-      return 'TaskManager';
-    }
-
-    // Try to get section from state
-    let stateSection = null;
-    if (e && e.state && e.state.section) {
-      stateSection = e.state.section;
-    } else if (window.history.state && window.history.state.section) {
-      stateSection = window.history.state.section;
-    }
-
-    // If hash exists and is not a Task route, check if state matches hash
-    // If state says TaskManager but hash is something else, prioritize hash
-    if (hash && hash !== '#TaskManager') {
-      const hashSection = hash.replace('#', '').trim();
-      const recognizedSections = Object.keys(hashToSectionMap);
-      const isRecognizedSection = recognizedSections.some(s => hashSection === s || hashSection === s.replace(/\s+/g, ''));
-      
-      // If hash is a recognized section but state says TaskManager, use hash
-      if (isRecognizedSection && stateSection === 'TaskManager') {
-        return hashToSectionMap[hashSection] || hashSection || 'Home';
-      }
-    }
-
-    // Use state section if available
-    if (stateSection) {
-      return stateSection;
-    }
-
-    // Extract from hash and map it back to section name
-    const hashSection = hash.replace('#', '').trim();
-    if (hashSection) {
-      // Map hash value back to section name (e.g., 'StudyMaterials' -> 'Study Materials')
-      return hashToSectionMap[hashSection] || hashSection || 'Home';
-    }
-
-    return 'Home';
-  }, []);
-
-  // Update app state based on URL/history
-  const updateSectionFromHistory = useCallback((e = null, isPopStateEvent = false) => {
-    const section = getSectionFromUrl(e);
-
-    // If the section is Profile but user is not logged in, redirect to Home
-    if (section === 'Profile' && !isLoggedIn) {
-      setActiveSection('Home');
-      setShowProfile(false);
-      // Only replace state if not a popstate event (which means user action, not browser navigation)
-      if (!isPopStateEvent) {
-        try {
-          window.history.replaceState({ section: 'Home' }, '', '#Home');
-        } catch {}
-      }
-      return;
-    }
-
-    // Maintain showProfile flag when appropriate
-    if (section === 'Profile') {
-      setShowProfile(true);
-    } else {
-      setShowProfile(false);
-    }
-    
-    setActiveSection(section);
-    
-    // Only update history state if it's not a popstate event (browser back/forward)
-    // For popstate events, the browser has already navigated and we should respect that
-    // Only fix mismatches when it's not a browser navigation event
-    if (!isPopStateEvent && (!e || !e.state || !e.state.section)) {
-      try {
-        const hash = section === 'TaskManager' 
-          ? window.location.hash 
-          : `#${section.replace(/\s+/g, '')}`;
-        // Check if we actually need to update (avoid unnecessary replaces)
-        const currentHash = window.location.hash || '';
-        const expectedHash = section === 'TaskManager' ? currentHash : `#${section.replace(/\s+/g, '')}`;
-        if (currentHash !== expectedHash) {
-          window.history.replaceState({ section }, '', expectedHash);
-        }
-      } catch {}
-    }
-  }, [isLoggedIn, getSectionFromUrl]);
-
-  // Listen for browser back/forward (popstate) and hash changes
-  useEffect(() => {
-    let hashChangeTimeout = null;
-    
-    const onPopState = (e) => {
-      // Clear any pending hashchange timeout since popstate will handle it
-      if (hashChangeTimeout) {
-        clearTimeout(hashChangeTimeout);
-        hashChangeTimeout = null;
-      }
-      
-      // Set flag to prevent handleSectionChange from pushing new history
-      isNavigatingFromBrowser.current = true;
-      
-      // Don't modify history during popstate - just let getSectionFromUrl handle it
-      // getSectionFromUrl now prioritizes hash when state doesn't match
-      
-      // Pass true to indicate this is a popstate event (browser navigation)
-      // This prevents replaceState calls that would interfere with history stack
-      updateSectionFromHistory(e, true);
-      
-      // Clear the flag in the next tick to allow state updates to complete
-      // Use requestAnimationFrame to ensure it happens after React updates
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          isNavigatingFromBrowser.current = false;
-        });
-      });
-    };
-
-    const onHashChange = () => {
-      // Hashchange events can fire for various reasons (including manual URL changes)
-      // We need to be careful not to interfere with popstate navigation
-      // Only handle if popstate didn't already handle it
-      if (hashChangeTimeout) {
-        clearTimeout(hashChangeTimeout);
-      }
-      
-      // Use a longer timeout to ensure popstate has a chance to fire first
-      hashChangeTimeout = setTimeout(() => {
-        const currentState = window.history.state;
-        const currentHash = window.location.hash || '';
-        
-        // Only update if:
-        // 1. State is missing (hashchange without proper state)
-        // 2. State doesn't match the hash (inconsistency)
-        // 3. This isn't a Task route (those are handled separately)
-        if (currentHash && !currentHash.startsWith('#Task-')) {
-          if (!currentState || !currentState.section) {
-            // State missing, update from hash
-            updateSectionFromHistory(null, false);
-          } else {
-            // Check if state matches hash
-            const expectedHash = `#${currentState.section.replace(/\s+/g, '')}`;
-            if (currentHash !== expectedHash) {
-              // Mismatch detected, update from hash
-              updateSectionFromHistory(null, false);
-            }
-          }
-        }
-        hashChangeTimeout = null;
-      }, 50);
-    };
-
-    window.addEventListener('popstate', onPopState);
-    window.addEventListener('hashchange', onHashChange);
-    
-    return () => {
-      window.removeEventListener('popstate', onPopState);
-      window.removeEventListener('hashchange', onHashChange);
-      // Clean up any pending timeout
-      if (hashChangeTimeout) {
-        clearTimeout(hashChangeTimeout);
-        hashChangeTimeout = null;
-      }
-    };
-  }, [isLoggedIn, updateSectionFromHistory]);
-
-  // Ensure initial history state matches the current activeSection and URL
-  useEffect(() => {
-    try {
-      const currentHash = window.location.hash || '';
-      const currentState = window.history.state;
-      
-      // Only initialize if state is missing or doesn't match
-      // This prevents interfering with existing history
-      if (!currentState || !currentState.section) {
-        let currentSection = getSectionFromUrl();
-        
-        if (currentHash.startsWith('#Task-')) {
-          currentSection = 'TaskManager';
-          window.history.replaceState({ section: 'TaskManager' }, '', currentHash);
-        } else if (currentHash) {
-          const safeHash = `#${currentSection.replace(/\s+/g, '')}`;
-          window.history.replaceState({ section: currentSection }, '', safeHash);
-        } else {
-          // No hash, set initial state to Home
-          currentSection = 'Home';
-          window.history.replaceState({ section: 'Home' }, '', '#Home');
-        }
-        
-        // Update activeSection to match URL if needed
-        if (currentSection !== activeSection) {
-          setActiveSection(currentSection);
-          if (currentSection === 'Profile') {
-            setShowProfile(true);
-          }
-        }
-      } else {
-        // State already exists, just sync activeSection with it
-        const stateSection = currentState.section;
-        if (stateSection !== activeSection) {
-          setActiveSection(stateSection);
-          if (stateSection === 'Profile') {
-            setShowProfile(true);
-          }
-        }
-      }
-    } catch (e) {
-      console.error('Error initializing history state:', e);
-    }
-    // Only run once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Main content renderer
   const renderContent = () => {
-    // If showProfile is true, show profile regardless of activeSection
     if (showProfile && userData) {
       return (
-        <ProtectedRoute 
-          isAuthenticated={isLoggedIn} 
-          onLoginRequired={() => setIsLoginModalOpen(true)}
-        >
+        <ProtectedRoute isAuthenticated={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)}>
           <Profile user={userData} onLogout={handleLogout} />
         </ProtectedRoute>
       );
@@ -374,85 +164,50 @@ function App() {
 
     switch (activeSection) {
       case 'Profile':
-        if (userData) {
-          return (
-            <ProtectedRoute 
-              isAuthenticated={isLoggedIn} 
-              onLoginRequired={() => setIsLoginModalOpen(true)}
-            >
+        return userData ? (
+            <ProtectedRoute isAuthenticated={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)}>
               <Profile user={userData} onLogout={handleLogout} />
             </ProtectedRoute>
-          );
-        } else {
-          // If trying to access profile without user data, show authentication required
-          return (
-            <ProtectedRoute 
-              isAuthenticated={isLoggedIn} 
-              onLoginRequired={() => setIsLoginModalOpen(true)}
-            >
-              <div>Loading...</div>
-            </ProtectedRoute>
-          );
-        }
+          ) : <div>Loading...</div>;
       case 'Home': 
         return <Home onSectionChange={handleSectionChange} isLoggedIn={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)} />;
-      
       case 'Seniors': 
         return (
-          <ProtectedRoute 
-            isAuthenticated={isLoggedIn} 
-            onLoginRequired={() => setIsLoginModalOpen(true)}
-          >
+          <ProtectedRoute isAuthenticated={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)}>
             <SeniorsPage onBackToHome={handleBackToHome} />
           </ProtectedRoute>
         );
-      
       case 'TaskManager': 
         return (
-          <ProtectedRoute 
-            isAuthenticated={isLoggedIn} 
-            onLoginRequired={() => setIsLoginModalOpen(true)}
-          >
+          <ProtectedRoute isAuthenticated={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)}>
             <Task />
           </ProtectedRoute>
         );
-      
       case 'EventBuddy': 
         return (
-          <ProtectedRoute 
-            isAuthenticated={isLoggedIn} 
-            onLoginRequired={() => setIsLoginModalOpen(true)}
-          >
+          <ProtectedRoute isAuthenticated={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)}>
             <CalendarPage />
           </ProtectedRoute>
         );
-      
       case 'Chatbot':
         return (
-          <ProtectedRoute 
-            isAuthenticated={isLoggedIn} 
-            onLoginRequired={() => setIsLoginModalOpen(true)}
-          >
+          <ProtectedRoute isAuthenticated={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)}>
             <ChatbotHub />
           </ProtectedRoute>
         );
-      
       case 'Study Materials':
         return (
-          <ProtectedRoute 
-            isAuthenticated={isLoggedIn} 
-            onLoginRequired={() => setIsLoginModalOpen(true)}
-          >
-            <StudyMaterials user={userData} onLogout={handleLogout} />
+          <ProtectedRoute isAuthenticated={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)}>
+            <StudyMaterials 
+              key={`study-${componentKey}`} 
+              user={userData} 
+              onLogout={handleLogout} 
+            />
           </ProtectedRoute>
         );
-      
       case 'About Us':
         return (
-          <ProtectedRoute 
-            isAuthenticated={isLoggedIn} 
-            onLoginRequired={() => setIsLoginModalOpen(true)}
-          >
+          <ProtectedRoute isAuthenticated={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)}>
             <div className="min-h-screen custom-beige py-12 px-4">
               <div className="max-w-7xl mx-auto text-center">
                 <p className="text-lg custom-brown opacity-90 max-w-3xl mx-auto leading-relaxed">
@@ -504,7 +259,6 @@ function App() {
             </div>
           </ProtectedRoute>
         );
-      
       default:
         return <Home onSectionChange={handleSectionChange} isLoggedIn={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)} />;
     }
@@ -520,8 +274,13 @@ function App() {
         activeSection={activeSection}
         onSectionChange={handleSectionChange}
       />
-      {renderContent()}
+      
+      <div className="pt-16">
+        {renderContent()}
+      </div>
+
       {activeSection !== 'Chatbot' && <Footer onSectionChange={handleSectionChange} />}
+      
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}

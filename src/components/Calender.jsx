@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import axios from 'axios'
 import './Calendar.css'
 
 const Calendar = ({ onBack }) => {
@@ -7,7 +8,8 @@ const Calendar = ({ onBack }) => {
     { id: 2, title: 'Mid-term Exams', date: '2025-02-20', type: 'exam', isCollege: true },
     { id: 3, title: 'Sports Day', date: '2025-02-28', type: 'event', isCollege: true }
   ])
-  
+
+  const [user, setUser] = useState(null)
   const [newEvent, setNewEvent] = useState({ title: '', date: '', type: 'event' })
   const [notification, setNotification] = useState('')
   const [currentMonth, setCurrentMonth] = useState(new Date())
@@ -76,11 +78,24 @@ const Calendar = ({ onBack }) => {
     }
   }, [events])
 
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') addEvent()
+  }
+
   const addEvent = () => {
-    if (newEvent.title && newEvent.date) {
-      setEvents([...events, { id: Date.now(), ...newEvent, isCollege: false }])
-      setNewEvent({ title: '', date: '', type: 'event' })
+    if (!newEvent.title || !newEvent.date) return;
+
+    // Disallow past dates
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const eventDate = new Date(`${newEvent.date}T00:00:00`);
+    if (eventDate < today) {
+      alert('Please select today or a future date.');
+      return;
     }
+
+    setEvents([...events, { id: Date.now(), ...newEvent, isCollege: false }]);
+    setNewEvent({ title: '', date: '', type: 'event' });
   }
 
   // Delete event manually

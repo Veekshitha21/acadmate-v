@@ -6,6 +6,8 @@ import ApiService from "../services/api";
 export default function LoginModal({ isOpen, onClose, onLogin }) {
   const [isRegistering, setIsRegistering] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [formKey, setFormKey] = useState(0);
+  const [inputsReadOnly, setInputsReadOnly] = useState(true);
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -175,9 +177,51 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
 
   // Handle Input Changes
   const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    // Extract field name without formKey suffix
+    const fieldName = e.target.name.replace(/-\d+$/, '');
+    setFormData({ ...formData, [fieldName]: e.target.value });
     if (error.message) setError({ message: "", field: "" });
   };
+
+  // Reset form whenever modal closes
+  const resetForm = () => {
+    setFormData({
+      username: "",
+      password: "",
+      confirmPassword: "",
+      usn: "",
+      branch: "",
+      section: "",
+      email: "",
+      phone: "",
+    });
+    setError({ message: "", field: "" });
+    setIsRegistering(false);
+    setLoading(false);
+  };
+
+  React.useEffect(() => {
+    if (isOpen) {
+      resetForm();
+      setInputsReadOnly(true);
+      setFormKey((k) => k + 1); // force DOM inputs to remount and drop autofill
+      // Some browsers re-apply autofill after initial render; clear again shortly after open.
+      const timer1 = setTimeout(() => {
+        resetForm();
+        setFormKey((k) => k + 1);
+      }, 50);
+      const timer2 = setTimeout(() => {
+        resetForm();
+        setInputsReadOnly(false); // Allow input after clearing attempts
+      }, 200);
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+      };
+    } else {
+      setInputsReadOnly(true);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -199,7 +243,17 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form
+            key={formKey}
+            onSubmit={handleSubmit}
+            className="space-y-4"
+            autoComplete="off"
+            name={`login-register-form-${formKey}`}
+          >
+            {/* Hidden dummy inputs to confuse browser autofill */}
+            <input type="text" name="fake-email" autoComplete="off" style={{ position: 'absolute', left: '-9999px', opacity: 0 }} tabIndex={-1} />
+            <input type="password" name="fake-password" autoComplete="off" style={{ position: 'absolute', left: '-9999px', opacity: 0 }} tabIndex={-1} />
+            
             {isRegistering && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -211,6 +265,7 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
                     name="username"
                     value={formData.username}
                     onChange={handleInputChange}
+                    autoComplete="off"
                     className={`w-full px-3 py-2 border rounded-lg ${
                       error.field === "username"
                         ? "border-red-500"
@@ -230,6 +285,7 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
                     name="usn"
                     value={formData.usn}
                     onChange={handleInputChange}
+                    autoComplete="off"
                     className={`w-full px-3 py-2 border rounded-lg ${
                       error.field === "usn"
                         ? "border-red-500"
@@ -250,9 +306,18 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
               </label>
               <input
                 type="email"
-                name="email"
+                name={`email-${formKey}`}
+                id={`email-${formKey}`}
                 value={formData.email}
                 onChange={handleInputChange}
+                autoComplete="off"
+                readOnly={inputsReadOnly}
+                onFocus={(e) => {
+                  if (e.target.readOnly) {
+                    e.target.readOnly = false;
+                    setInputsReadOnly(false);
+                  }
+                }}
                 className={`w-full px-3 py-2 border rounded-lg ${
                   error.field === "email"
                     ? "border-red-500"
@@ -274,9 +339,18 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
                 </label>
                 <input
                   type="password"
-                  name="password"
+                  name={`password-${formKey}`}
+                  id={`password-${formKey}`}
                   value={formData.password}
                   onChange={handleInputChange}
+                  autoComplete="new-password"
+                  readOnly={inputsReadOnly}
+                  onFocus={(e) => {
+                    if (e.target.readOnly) {
+                      e.target.readOnly = false;
+                      setInputsReadOnly(false);
+                    }
+                  }}
                   className={`w-full px-3 py-2 border rounded-lg ${
                     error.field === "password"
                       ? "border-red-500"
@@ -294,9 +368,18 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
                   </label>
                   <input
                     type="password"
-                    name="confirmPassword"
+                    name={`confirmPassword-${formKey}`}
+                    id={`confirmPassword-${formKey}`}
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
+                    autoComplete="new-password"
+                    readOnly={inputsReadOnly}
+                    onFocus={(e) => {
+                      if (e.target.readOnly) {
+                        e.target.readOnly = false;
+                        setInputsReadOnly(false);
+                      }
+                    }}
                     className={`w-full px-3 py-2 border rounded-lg ${
                       error.field === "confirmPassword"
                         ? "border-red-500"

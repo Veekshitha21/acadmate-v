@@ -137,6 +137,14 @@
   transform: translateY(0);
 }
 
+/* Disable reveal/slide-up animations on the EduBoat landing so it appears instantly */
+.eduboat-container .reveal,
+.eduboat-container .reveal.active {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+}
+
 .chatbot-hub {
   display: flex;
   flex-direction: column;
@@ -191,6 +199,8 @@
   justify-content: center;
   font-size: 1.2rem;
   font-weight: bold;
+  z-index: 1001; /* ensure button is above other elements on small screens */
+  pointer-events: auto;
 }
 
 .back-button-header:hover {
@@ -199,10 +209,21 @@
   background: var(--beige);
 }
 
-.back-button-header::before {
-  content: '←';
+.back-button-header .back-icon {
   font-size: 1.5rem;
-  font-weight: bold;
+  line-height: 1;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
 }
 
 
@@ -860,6 +881,16 @@
     padding: 1rem;
   }
 
+  .back-button-header {
+    position: fixed;
+    top: 0.6rem;
+    left: 0.6rem;
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+    z-index: 1001;
+  }
+
   .chatbot-header h1 {
     font-size: 1.3rem;
   }
@@ -907,6 +938,13 @@
   .eduboat-container {
     padding: 1rem 0.75rem;
   }
+
+/* Ensure EduBoat landing isn't hidden beneath the sticky navbar when scrolled into view */
+.eduboat-container {
+  /* reserve space equal to navbar height + a small gap (uses --navbar-height set at runtime) */
+  scroll-margin-top: calc(var(--navbar-height, 120px) + 8px);
+  padding-top: 2rem; /* ensure heading has breathing room under the navbar */
+}
 
   .card-section {
     grid-template-columns: 1fr; /* stack cards vertically on very small screens */

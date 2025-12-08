@@ -2,7 +2,6 @@ import React from 'react';
 import { data } from './data';
 import './PdfListPage.css';
 
-//this si a pdfListPage
 const PdfListPage = ({ user, onLogout, cycle, type, subjectId, onNavigate, onBack }) => {
 
   const currentCycleData = data[cycle];
@@ -55,7 +54,9 @@ const PdfListPage = ({ user, onLogout, cycle, type, subjectId, onNavigate, onBac
                 <a
                   key={pdf.url}
                   href={pdf.url}
-                  target="_self"
+                  // --- FIX: Change target to "_blank" ---
+                  // This tells the browser to open the link in a new tab
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="pdf-list-item"
                 >
