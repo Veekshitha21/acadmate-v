@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Linkedin, Github } from 'lucide-react';
 import Navbar from './components/Navbar';
 import Home from './components/Home';
@@ -8,139 +8,25 @@ import Profile from './components/Profile';
 import SeniorsPage from './components/SeniorsPage.jsx';
 import CalendarPage from './components/CalendarPage.jsx';
 import Task from './components/TaskMananger/Task.jsx';
-import ChatbotHub from './components/ChatbotHub.jsx';
+import ChatbotHub from './components/ChatbotHub.jsx'; 
 import StudyMaterials from './components/StudyMaterials.jsx';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
-  const [activeSection, setActiveSection] = useState('Home');
-  const [componentKey, setComponentKey] = useState(0); 
-
+  const [activeSection, setActiveSection] = useState(() => {
+    try {
+      const stateSection = window.history.state && window.history.state.section;
+      if (stateSection) return stateSection;
+    } catch {}
+    const hash = window.location.hash && window.location.hash.replace('#', '');
+    return hash || 'Home';
+  });
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
-  const isNavigatingFromBrowser = React.useRef(false);
 
-  const hashToSectionMap = {
-    'Home': 'Home',
-    'Seniors': 'Seniors',
-    'TaskManager': 'TaskManager',
-    'EventBuddy': 'EventBuddy',
-    'Chatbot': 'Chatbot',
-    'StudyMaterials': 'Study Materials',
-    'AboutUs': 'About Us',
-    'Profile': 'Profile'
-  };
-
-  // ✅ Restore login state from localStorage on refresh
-  useEffect(() => {
-    const savedUser = localStorage.getItem('userData');
-    const savedLogin = localStorage.getItem('isLoggedIn');
-
-    if (savedLogin === 'true' && savedUser) {
-      setIsLoggedIn(true);
-      setUserData(JSON.parse(savedUser));
-    }
-  }, []);
-
-  const getSectionFromUrl = useCallback((e = null) => {
-    const hash = window.location.hash || '';
-    if (hash.startsWith('#Task-')) return 'TaskManager';
-
-    const cleanHash = hash.replace('#', '').split('/')[0].trim();
-
-    if (cleanHash && cleanHash !== 'TaskManager') {
-      const recognizedSections = Object.keys(hashToSectionMap);
-      const isRecognizedSection = recognizedSections.some(
-        s => cleanHash === s || cleanHash === s.replace(/\s+/g, '')
-      );
-      if (isRecognizedSection) {
-        return hashToSectionMap[cleanHash] || cleanHash;
-      }
-    }
-    return 'Home';
-  }, []);
-
-  useEffect(() => {
-    const section = getSectionFromUrl();
-    setActiveSection(section);
-  }, [getSectionFromUrl]);
-
-  useEffect(() => {
-    const onPopState = (e) => {
-      isNavigatingFromBrowser.current = true;
-      const section = getSectionFromUrl(e);
-
-      if (section === 'Study Materials' && !window.location.hash.includes('/')) {
-        setComponentKey(prev => prev + 1);
-      }
-
-      handleSectionChangeInternal(section, true);
-      setTimeout(() => { isNavigatingFromBrowser.current = false; }, 100);
-    };
-
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
-  }, [getSectionFromUrl]);
-
-  const handleSectionChangeInternal = (section, isFromBrowser = false) => {
-    if (section === 'Profile' && !isLoggedIn) {
-      setActiveSection('Home');
-      setShowProfile(false);
-      if (!isFromBrowser) window.history.replaceState({ section: 'Home' }, '', '#Home');
-      return;
-    }
-
-    if (section === 'Profile') setShowProfile(true);
-    else setShowProfile(false);
-
-    setActiveSection(section);
-
-    if (!isFromBrowser) {
-      const hash = `#${section.replace(/\s+/g, '')}`;
-      try {
-        if (window.location.hash.split('/')[0] !== hash) {
-          window.history.pushState({ section }, '', hash);
-        }
-      } catch (e) { console.error(e); }
-    }
-  };
-
-  const handleSectionChange = (section) => {
-    if (section === activeSection) return;
-    handleSectionChangeInternal(section, false);
-  };
-
-  // ✅ Save login to localStorage
-  const handleLogin = (data) => {
-    setUserData(data);
-    setIsLoggedIn(true);
-
-    localStorage.setItem('userData', JSON.stringify(data));
-    localStorage.setItem('isLoggedIn', 'true');
-
-    setIsLoginModalOpen(false);
-    setShowProfile(false);
-    handleSectionChange('Home');
-  };
-
-  // ✅ Clear localStorage on logout
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUserData(null);
-    setShowProfile(false);
-
-    localStorage.removeItem('userData');
-    localStorage.removeItem('isLoggedIn');
-
-    handleSectionChange('Home');
-  };
-
-  const handleShowProfile = () => { handleSectionChange('Profile'); };
-  const handleBackToHome = () => { handleSectionChange('Home'); };
-
-  // Team Data
+  
   const teamMembers = [
     { name: 'Bhaskara', linkedin: 'https://www.linkedin.com/in/bhaskara-88aa76322/', github: 'https://github.com/bhaskara05' },
     { name: 'Khushal L', linkedin: 'https://linkedin.com/khushal-l', github: 'https://github.com/Khushal1513' },
@@ -153,7 +39,9 @@ function App() {
     { name: 'Dileep', linkedin: 'https://www.linkedin.com/in/dileep-shivakumar-b577982b2/', github: 'https://github.com/Dileep-S-S' }
   ];
 
-  const nameToSlug = (fullName) => fullName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  // Utilities
+  const nameToSlug = (fullName) =>
+    fullName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   const sanitizeUrl = (url) => (url ? url.trim() : '#');
   const ensureHttps = (raw) => {
     const s = sanitizeUrl(raw);
@@ -174,10 +62,81 @@ function App() {
     }
   };
 
+  // Handlers
+  const handleLogin = (data) => {
+    setUserData(data);
+    setIsLoggedIn(true);
+    setIsLoginModalOpen(false);
+    setShowProfile(false);
+    setActiveSection('Home');
+    try { window.history.pushState({ section: 'Home' }, '', '#Home'); } catch {}
+  };
+  const handleShowProfile = () => {
+    setShowProfile(true);
+    setActiveSection('Profile');
+    try { window.history.pushState({ section: 'Profile' }, '', '#Profile'); } catch {}
+  };
+  const handleBackToHome = () => {
+    setShowProfile(false);
+    setActiveSection('Home');
+    try { window.history.pushState({ section: 'Home' }, '', '#Home'); } catch {}
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setUserData(null);
+    setShowProfile(false);
+    setActiveSection('Home');
+    try { window.history.pushState({ section: 'Home' }, '', '#Home'); } catch {}
+  };
+
+  const handleSectionChange = (section) => {
+    // Reset showProfile when navigating to any section other than Profile
+    if (section !== 'Profile') {
+      setShowProfile(false);
+    }
+    setActiveSection(section);
+    // Push into browser history so back/forward works
+    try { window.history.pushState({ section }, '', `#${section.replace(/\s+/g, '')}`); } catch {}
+  };
+
+  // Listen for browser back/forward (popstate) and update app state accordingly
+  useEffect(() => {
+    const onPop = (e) => {
+      const stateSection = (e.state && e.state.section) || (window.location.hash && window.location.hash.replace('#', '')) || 'Home';
+      // If the section is Profile but user is not logged in, open login flow instead
+      if (stateSection === 'Profile' && !isLoggedIn) {
+        setActiveSection('Home');
+        setShowProfile(false);
+        return;
+      }
+      // Maintain showProfile flag when appropriate
+      if (stateSection === 'Profile') setShowProfile(true);
+      else setShowProfile(false);
+      setActiveSection(stateSection);
+    };
+
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, [isLoggedIn]);
+
+  // Ensure initial history state matches the current activeSection
+  useEffect(() => {
+    try {
+      const safeHash = `${activeSection}`.replace(/\s+/g, '');
+      window.history.replaceState({ section: activeSection }, '', `#${safeHash}`);
+    } catch {}
+  }, []);
+
+  // Main content renderer
   const renderContent = () => {
+    // If showProfile is true, show profile regardless of activeSection
     if (showProfile && userData) {
       return (
-        <ProtectedRoute isAuthenticated={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)}>
+        <ProtectedRoute 
+          isAuthenticated={isLoggedIn} 
+          onLoginRequired={() => setIsLoginModalOpen(true)}
+        >
           <Profile user={userData} onLogout={handleLogout} />
         </ProtectedRoute>
       );
@@ -185,57 +144,85 @@ function App() {
 
     switch (activeSection) {
       case 'Profile':
-        return userData ? (
-          <ProtectedRoute isAuthenticated={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)}>
-            <Profile user={userData} onLogout={handleLogout} />
-          </ProtectedRoute>
-        ) : <div>Loading...</div>;
-
+        if (userData) {
+          return (
+            <ProtectedRoute 
+              isAuthenticated={isLoggedIn} 
+              onLoginRequired={() => setIsLoginModalOpen(true)}
+            >
+              <Profile user={userData} onLogout={handleLogout} />
+            </ProtectedRoute>
+          );
+        } else {
+          // If trying to access profile without user data, show authentication required
+          return (
+            <ProtectedRoute 
+              isAuthenticated={isLoggedIn} 
+              onLoginRequired={() => setIsLoginModalOpen(true)}
+            >
+              <div>Loading...</div>
+            </ProtectedRoute>
+          );
+        }
       case 'Home': 
         return <Home onSectionChange={handleSectionChange} isLoggedIn={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)} />;
-
+      
       case 'Seniors': 
         return (
-          <ProtectedRoute isAuthenticated={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)}>
+          <ProtectedRoute 
+            isAuthenticated={isLoggedIn} 
+            onLoginRequired={() => setIsLoginModalOpen(true)}
+          >
             <SeniorsPage onBackToHome={handleBackToHome} />
           </ProtectedRoute>
         );
-
+      
       case 'TaskManager': 
         return (
-          <ProtectedRoute isAuthenticated={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)}>
+          <ProtectedRoute 
+            isAuthenticated={isLoggedIn} 
+            onLoginRequired={() => setIsLoginModalOpen(true)}
+          >
             <Task />
           </ProtectedRoute>
         );
-
+      
       case 'EventBuddy': 
         return (
-          <ProtectedRoute isAuthenticated={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)}>
+          <ProtectedRoute 
+            isAuthenticated={isLoggedIn} 
+            onLoginRequired={() => setIsLoginModalOpen(true)}
+          >
             <CalendarPage />
           </ProtectedRoute>
         );
-
+      
       case 'Chatbot':
         return (
-          <ProtectedRoute isAuthenticated={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)}>
+          <ProtectedRoute 
+            isAuthenticated={isLoggedIn} 
+            onLoginRequired={() => setIsLoginModalOpen(true)}
+          >
             <ChatbotHub />
           </ProtectedRoute>
         );
-
+      
       case 'Study Materials':
         return (
-          <ProtectedRoute isAuthenticated={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)}>
-            <StudyMaterials 
-              key={`study-${componentKey}`} 
-              user={userData} 
-              onLogout={handleLogout} 
-            />
+          <ProtectedRoute 
+            isAuthenticated={isLoggedIn} 
+            onLoginRequired={() => setIsLoginModalOpen(true)}
+          >
+            <StudyMaterials user={userData} onLogout={handleLogout} />
           </ProtectedRoute>
         );
-
+      
       case 'About Us':
         return (
-          <ProtectedRoute isAuthenticated={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)}>
+          <ProtectedRoute 
+            isAuthenticated={isLoggedIn} 
+            onLoginRequired={() => setIsLoginModalOpen(true)}
+          >
             <div className="min-h-screen custom-beige py-12 px-4">
               <div className="max-w-7xl mx-auto text-center">
                 <p className="text-lg custom-brown opacity-90 max-w-3xl mx-auto leading-relaxed">
@@ -268,7 +255,6 @@ function App() {
                           <h3 className="text-2xl font-bold custom-brown mb-2">{member.name}</h3>
                           <p className="text-sm custom-brown opacity-70">Team Member</p>
                         </div>
-
                         <div className="absolute inset-0 bg-white rounded-2xl p-6 flex flex-col items-center justify-center gap-5 [transform:rotateY(180deg)] [backface-visibility:hidden]">
                           <h4 className="text-xl font-semibold custom-brown">Connect</h4>
                           <div className="flex items-center gap-6">
@@ -280,7 +266,6 @@ function App() {
                             </a>
                           </div>
                         </div>
-
                       </div>
                     </div>
                   ))}
@@ -289,7 +274,7 @@ function App() {
             </div>
           </ProtectedRoute>
         );
-
+      
       default:
         return <Home onSectionChange={handleSectionChange} isLoggedIn={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)} />;
     }
@@ -305,13 +290,8 @@ function App() {
         activeSection={activeSection}
         onSectionChange={handleSectionChange}
       />
-
-      <div className="pt-16">
-        {renderContent()}
-      </div>
-
+      {renderContent()}
       {activeSection !== 'Chatbot' && <Footer onSectionChange={handleSectionChange} />}
-
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
