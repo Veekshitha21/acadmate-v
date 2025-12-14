@@ -290,7 +290,9 @@ function App() {
         activeSection={activeSection}
         onSectionChange={handleSectionChange}
       />
-      {renderContent()}
+      <div className="pt-16">
+        {renderContent()}
+      </div>
       {activeSection !== 'Chatbot' && <Footer onSectionChange={handleSectionChange} />}
       <LoginModal
         isOpen={isLoginModalOpen}
