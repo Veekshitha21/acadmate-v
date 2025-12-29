@@ -62,7 +62,7 @@ const ChatbotHub = () => {
     setShowMarksDropdown(false);
     setIsTyping(true);
 
-    const endpoint = "http://127.0.0.1:8000/ask";
+    const endpoint = "http://127.0.0.1:8000/query";
 
     const payload = {
       question: messageToSend,
