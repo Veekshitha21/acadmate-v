@@ -44,14 +44,17 @@ const ChatbotHub = () => {
   }, []);
 
   const sendMessage = () => {
-    if (!input.trim()) return;
-    if (isSendingRef.current) return; // Prevent double-send from Strict Mode
+    const trimmedInput = input.trim();
+    if (!trimmedInput) return;
+    if (isSendingRef.current) return;
+
     isSendingRef.current = true;
 
-    const messageToSend = input;
-    const userMessage = activeMode === "examprep"
-      ? `${messageToSend} (${selectedMarks} marks)`
-      : messageToSend;
+    const messageToSend = trimmedInput;
+    const userMessage =
+      activeMode === "examprep"
+        ? `${messageToSend} (${selectedMarks} marks)`
+        : messageToSend;
 
     setMessages(prev => ({
       ...prev,
@@ -62,14 +65,15 @@ const ChatbotHub = () => {
     setShowMarksDropdown(false);
     setIsTyping(true);
 
-    const endpoint = "http://127.0.0.1:8000/query";
-
     const payload = {
-      question: messageToSend,
+      query: messageToSend,   // ✅ FIXED
       marks: activeMode === "examprep" ? selectedMarks : 5,
+      temperature: 0.3
     };
 
-    fetch(endpoint, {
+    console.log("Sending payload:", payload); // 🔍 Debug
+
+    fetch("http://127.0.0.1:8000/query", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -77,7 +81,7 @@ const ChatbotHub = () => {
       .then(async (res) => {
         if (!res.ok) {
           const err = await res.json();
-          throw new Error(err.detail || "Error from server");
+          throw new Error(err.detail || "Server error");
         }
         return res.json();
       })
@@ -93,7 +97,7 @@ const ChatbotHub = () => {
           [activeMode]: [
             ...prev[activeMode],
             { type: "bot", text: `Error: ${error.message}` }
-          ],
+          ]
         }));
       })
       .finally(() => {
@@ -101,6 +105,7 @@ const ChatbotHub = () => {
         isSendingRef.current = false;
       });
   };
+
 
   const navigateToMode = (mode) => {
     setActiveMode(mode);
