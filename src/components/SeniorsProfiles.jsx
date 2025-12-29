@@ -360,40 +360,11 @@ const SeniorsProfiles = () => {
       bio: "Passionate about helping young minds discover the beauty of literature. Available for mentoring and academic guidance.",
       email: "bhaskarbhaskr09@gmail.com",
       linkedin: "https://www.linkedin.com/in/bhaskara-88aa76322",
-      avatar: "https://media.licdn.com/dms/image/v2/D4D03AQFesFldH12gcg/profile-displayphoto-shrink_800_800/B4DZcI1agTGkAc-/0/1748199910428?e=1761782400&v=beta&t=mIa9OqOuKOJ59b6RrKqvK7O8wSu0Sw2hjtN-QA3GaCM",
+      avatar: "https://media.licdn.com/dms/image/v2/D4D03AQFesFldH12gcg/profile-displayphoto-shrink_400_400/B4DZcI1agTGkAg-/0/1748199910403?e=1767830400&v=beta&t=UKAB46aUZb1mnECyBRAIfT9IFDHKYpqpVMnSaqGECFg",
       location: "Mysore",
       availability: "Available for guidance"
     },
-    {
-      id: 2,
-      name: "Manasa H N",
-      title: "Pre final year student",
-      experience: "Active contributor in college literary and tech clubs with hands-on leadership experience.",
-      expertise: ["Literature", "Creative Writing", "Mentoring"],
-      skills: "Java, Spring Boot, JDBC, UI/UX",
-      branch: "Computer Science Engineering",
-      bio: "Passionate about helping young minds discover the beauty of literature. Available for mentoring and academic guidance.",
-      email: "manasa14102004@gmail.com",
-      linkedin: "https://www.linkedin.com/in/manasa-h-n-0383bb331",
-      avatar: "https://media.licdn.com/dms/image/v2/D4E03AQE2TTkAldGOCg/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1729087501866?e=1761782400&v=beta&t=0-kJuw8tajJOpbR0Mwxe9M_8_yLwYJXEuxIlTSD8w8k",
-      location: "Mysore",
-      availability: "Available for guidance"
-    },
-    {
-      id: 2,
-      name: "Manasa H N",
-      title: "Pre final year student",
-      experience: "Active contributor in college literary and tech clubs with hands-on leadership experience.",
-      expertise: ["Literature", "Creative Writing", "Mentoring"],
-      skills: "Java, Spring Boot, JDBC, UI/UX",
-      branch: "Computer Science Engineering",
-      bio: "Passionate about helping young minds discover the beauty of literature. Available for mentoring and academic guidance.",
-      email: "manasa14102004@gmail.com",
-      linkedin: "https://www.linkedin.com/in/manasa-h-n-0383bb331",
-      avatar: "https://media.licdn.com/dms/image/v2/D4E03AQE2TTkAldGOCg/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1729087501866?e=1761782400&v=beta&t=0-kJuw8tajJOpbR0Mwxe9M_8_yLwYJXEuxIlTSD8w8k",
-      location: "Mysore",
-      availability: "Available for guidance"
-    }
+    
   ];
 
   const handleContact = (type, profile) => {

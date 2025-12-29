@@ -1,223 +1,164 @@
-import React, { useState, useEffect, useRef } from "react";
-import { auth } from "../firebase";
+/**
+ * Senior Contact Page Component
+ * 
+ * This page component serves as the main wrapper for the Senior Care contact application.
+ * It provides:
+ * - Header with title
+ * - Back button (updates active section)
+ * - Integration with the SeniorsProfiles component
+ */
 
-const SeniorsPage = () => {
-  const bannedWords = ["none", "nothing"];
-  const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState([]);
-  const messagesEndRef = useRef(null);
-  const [canSend, setCanSend] = useState(true);
+import React from 'react';
+import SeniorsProfiles from './SeniorsProfiles.jsx';
 
-  const API_BASE = "http://localhost:4000/api";
+const styles = `
+:root {
+	--white: white;
+	--beige: #fbf9f1;
+	--accent: #f4b30c;
+	--black: black;
+	--brown: #1a1200;
+	--beige-footer: #ddd9c5;
+	--gradient-primary: linear-gradient(135deg, #f4b30c 0%, #ff8c42 100%);
+	--gradient-bg: linear-gradient(135deg, #fbf9f1 0%, #f0ede1 50%, #e8e3d3 100%);
+	--shadow-soft: 0 8px 32px rgba(244, 179, 12, 0.1);
+	--shadow-hover: 0 16px 48px rgba(244, 179, 12, 0.2);
+}
 
-  function containsBadWord(text) {
-    return bannedWords.some((word) => text.toLowerCase().includes(word));
-  }
+* { box-sizing: border-box; }
+html, body { 
+	margin: 0; 
+	padding: 0; 
+	background: var(--gradient-bg);
+	color: var(--brown); 
+	font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; 
+	overflow-x: hidden;
+}
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
 
-  const fetchMessages = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/messages`);
-      const data = await res.json();
-      setMessages(data);
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-    }
-  };
+/* Smooth scroll */
+html { scroll-behavior: smooth; }
 
-  useEffect(() => {
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 3000); // refresh every 3s
-    return () => clearInterval(interval);
-  }, []);
+.container { width: min(1100px, 92vw); margin-inline: auto; }
+.hero { padding: 64px 0 24px; }
+.title { font-size: clamp(32px, 6vw, 60px); line-height: 1.05; margin: 0 0 12px; }
+.subtitle { color: rgba(0,0,0,0.7); margin: 0 0 18px; }
+.grid-3 { display: grid; grid-template-columns: 1fr; gap: 14px; }
+.card { background: var(--white); border: 1px solid rgba(0,0,0,0.08); border-radius: 16px; padding: 16px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 18px; border-radius: 999px; border: 1px solid rgba(0,0,0,0.12); background: var(--white); color: var(--brown); font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.btn--accent { background: var(--accent); border-color: var(--accent); }
+.options { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 18px; }
+.option { display: flex; flex-direction: column; align-items: flex-start; padding: 20px; border-radius: 14px; background: var(--white); border: 1px solid rgba(0,0,0,0.08); cursor: pointer; transition: all 0.2s; }
+.option:hover { box-shadow: 0 10px 20px rgba(0,0,0,0.06); transform: translateY(-2px); }
+.option-title { font-weight: 700; margin-bottom: 8px; }
+.option-desc { color: rgba(0,0,0,0.7); font-size: 14px; }
+.back { margin-top: 18px; }
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-weight: 600; margin-bottom: 6px; }
+.form-input { width: 100%; padding: 10px; border: 1px solid rgba(0,0,0,0.12); border-radius: 8px; font-size: 14px; }
+.form-input:focus { outline: none; border-color: var(--accent); }
+.grade-result { padding: 12px; margin: 8px 0; border-radius: 8px; background: var(--white); border: 1px solid rgba(0,0,0,0.08); }
+.grade-letter { font-weight: 700; font-size: 18px; color: var(--accent); }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; margin: 16px 0; }
+.calendar-day { padding: 8px; text-align: center; border: 1px solid rgba(0,0,0,0.08); min-height: 40px; }
+.calendar-day.has-event { background: rgba(244, 179, 12, 0.1); }
+.event-item { padding: 8px; margin: 4px 0; background: var(--white); border-radius: 6px; border-left: 4px solid var(--accent); font-size: 12px; }
+.notification { position: fixed; top: 20px; right: 20px; background: var(--accent); color: var(--brown); padding: 12px 16px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; }
+@media (min-width: 768px) { .grid-3 { grid-template-columns: repeat(3, 1fr); } .options { grid-template-columns: repeat(3, 1fr); } }
 
-  useEffect(() => {
-    if (!canSend) {
-      const timer = setTimeout(() => setCanSend(true), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [canSend]);
+/* Page Layout Styles */
+.page-layout {
+  min-height: 100vh;
+  background: var(--beige);
+  padding: 2rem;
+}
 
-  // Auto-scroll chat div to bottom whenever messages change
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollTo({
-        top: messagesEndRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }
-  }, [messages]);
+.page-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: var(--brown);
+}
 
-  const sendMessage = async (e) => {
-    e.preventDefault();
-    if (!message.trim()) return;
+.page-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
 
-    if (containsBadWord(message)) {
-      alert("⚠️ Please avoid using inappropriate language.");
-      return;
-    }
-    if (!canSend) {
-      alert("⏳ Wait a few seconds before sending again.");
-      return;
-    }
+.page-header p {
+  font-size: 1.1rem;
+  color: rgba(26, 18, 0, 0.7);
+}
 
-    try {
-      await fetch(`${API_BASE}/messages`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: message,
-          email: auth.currentUser?.email || "guest@example.com",
-        }),
-      });
+.page-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
 
-      setMessage("");
-      setCanSend(false);
-      fetchMessages();
-    } catch (error) {
-      console.error("Error sending message:", error);
-    }
-  };
+.grade-header {
+  margin-bottom: 2rem;
+}
+
+.grade-title {
+  margin: 0 auto;
+  color: var(--brown);
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  display: block;
+  width: 100%;
+}
+
+.back-button-container {
+  margin-bottom: 2rem;
+  padding: 0 1rem;
+}
+
+.back-btn {
+  background: var(--white);
+  border: 1px solid rgba(0,0,0,0.12);
+  color: var(--brown);
+  font-weight: 600;
+  padding: 12px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--brown);
+}
+`;
+
+const SeniorsPage = ({ onBackToHome }) => {
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-        background: "linear-gradient(135deg, #fbf9f1, #fdfcf8)",
-        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-      }}
-    >
-      {/* Header */}
-      <header
-        style={{
-          padding: "1rem",
-          textAlign: "center",
-          fontSize: "1.8rem",
-          fontWeight: "700",
-          color: "#f4b30c",
-          letterSpacing: "1px",
-          boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
-          borderBottomLeftRadius: "12px",
-          borderBottomRightRadius: "12px",
-        }}
-      >
-        📡 Community Broadcast Room
-      </header>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: styles }} />
+      <div className="page-layout min-h-screen custom-beige">
+      <div className="max-w-7xl mx-auto px-4 py-10 page-container">
+        {/* Header with title */}
+        <h2 className="grade-title">🎓 Meet Our Senior Mentors</h2>
 
-      {/* Chat Area */}
-      <div
-        style={{
-          flex: 1,
-          width: "75%",
-          margin: "1rem auto",
-          display: "flex",
-          flexDirection: "column",
-          background: "#fff",
-          borderRadius: "16px",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          ref={messagesEndRef} // 👈 scrollable chat div
-          style={{
-            flex: 1,
-            padding: "1rem",
-            overflowY: "auto",
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.5rem",
-          }}
-        >
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              style={{
-                padding: "0.8rem 1rem",
-                borderRadius: "14px",
-                maxWidth: "70%",
-                alignSelf:
-                  msg.email === auth.currentUser?.email ? "flex-end" : "flex-start",
-                background:
-                  msg.email === auth.currentUser?.email
-                    ? "linear-gradient(135deg, #667eea, #5a67f2)"
-                    : "#ddd9c5",
-                color: msg.email === auth.currentUser?.email ? "#fff" : "#000",
-                boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
-                animation: `fadeInUp 0.4s ease forwards`,
-              }}
-            >
-              <strong>{msg.email?.split("@")[0] || "Guest"}:</strong> {msg.text}
-            </div>
-          ))}
+        {/* Main content area */}
+        <div className="page-content">
+          <SeniorsProfiles />
         </div>
-
-        {/* Input */}
-        <form
-          onSubmit={sendMessage}
-          style={{
-            display: "flex",
-            borderTop: "1px solid #eee",
-            padding: "0.8rem",
-            background: "#fdfcf8",
-          }}
-        >
-          <textarea
-            placeholder="Type your message..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            rows={1}
-            style={{
-              flex: 1,
-              padding: "0.8rem",
-              border: "1px solid #ccc",
-              borderRadius: "14px",
-              outline: "none",
-              boxShadow: "inset 0 2px 4px rgba(0,0,0,0.05)",
-              transition: "box-shadow 0.3s ease",
-              fontSize: "0.95rem",
-            }}
-            onFocus={(e) => (e.target.style.boxShadow = "0 0 5px #667eea")}
-            onBlur={(e) =>
-              (e.target.style.boxShadow = "inset 0 2px 4px rgba(0,0,0,0.05)")
-            }
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage(e);
-              }
-            }}
-          />
-          <button
-            type="submit"
-            style={{
-              marginLeft: "0.6rem",
-              padding: "0.7rem 1.4rem",
-              border: "none",
-              borderRadius: "14px",
-              background: "linear-gradient(135deg, #f4b30c, #ff8c42)",
-              color: "#fff",
-              fontWeight: "bold",
-              cursor: "pointer",
-              boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
-              transition: "transform 0.2s ease",
-            }}
-            onMouseEnter={(e) => (e.target.style.transform = "scale(1.05)")}
-            onMouseLeave={(e) => (e.target.style.transform = "scale(1)")}
-          >
-            Send
-          </button>
-        </form>
       </div>
-
-      <style>{`
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(15px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
+    </>
   );
 };
 

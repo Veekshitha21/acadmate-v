@@ -1,8 +1,6 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./EduBoat.css";
-import { QuickHelpCard } from "./QuickHelp";
-import { DeepDiveCard } from "./DeepDive";
 import { ExamPrepCard } from "./ExamPrep";
 
 const EduBoat = () => {
@@ -39,12 +37,6 @@ const EduBoat = () => {
 
       {/* Cards */}
       <div className="card-section">
-        <Link to="/quickhelp" className="reveal" style={{ textDecoration: "none" }}>
-          <QuickHelpCard />
-        </Link>
-        <Link to="/deepdive" className="reveal" style={{ textDecoration: "none" }}>
-          <DeepDiveCard />
-        </Link>
         <Link to="/examprep" className="reveal" style={{ textDecoration: "none" }}>
           <ExamPrepCard />
         </Link>

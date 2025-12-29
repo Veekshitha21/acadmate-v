@@ -11,7 +11,7 @@ export default function Navbar({ isLoggedIn, onLogin, onShowProfile, onLogout, a
     { name: 'EventBuddy', protected: true },
     { name: 'Chatbot', protected: true },
     { name: 'Study Materials', protected: true },
-    { name: 'About Us', protected: true }
+
   ];
 
   const handleNavClick = (item) => {
