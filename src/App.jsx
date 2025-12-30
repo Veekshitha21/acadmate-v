@@ -93,17 +93,6 @@ function App() {
     } catch {}
   };
 
-
-  const handleSectionChange = (section) => {
-    // Reset showProfile when navigating to any section other than Profile
-    if (section !== 'Profile') {
-      setShowProfile(false);
-    }
-    setActiveSection(section);
-    // Push into browser history so back/forward works
-    try { window.history.pushState({ section }, '', `#${section.replace(/\s+/g, '')}`); } catch {}
-  };
-
   /* ================== Browser Back / Forward ================== */
   useEffect(() => {
     const onPop = (e) => {
