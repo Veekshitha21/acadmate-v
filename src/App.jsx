@@ -34,11 +34,7 @@ function App() {
   }, []);
 
   /* ================== Navigation ================== */
-  const handleSectionChange = (section) => {
-    if (section !== "Profile") setShowProfile(false);
-    setActiveSection(section);
-    window.history.pushState({ section }, "", `#${section.replace(/\s+/g, "")}`);
-  };
+  /* Navigation handled by single handler defined below. */
 
   // Handlers
   // const handleLogin = (data) => {
