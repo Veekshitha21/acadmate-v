@@ -23,8 +23,10 @@
     "firebase-admin": "^11.11.1",
     "firebase-functions": "^6.4.0",
     "helmet": "^7.2.0",
+    "isomorphic-dompurify": "^2.35.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.2",
+    "multer": "^2.0.2",
     "node-cron": "^4.2.1",
     "nodemailer": "^7.0.10",
     "validator": "^13.15.20"

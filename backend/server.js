@@ -1,72 +1,156 @@
+// server.js
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const cron = require("node-cron");
+const admin = require("firebase-admin");
+const multer = require("multer");
 require("dotenv").config();
 
+/* ================================
+   Firebase Admin Initialization
+================================ */
+const serviceAccount = require("./config/serviceAccountKey.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  storageBucket: process.env.FIREBASE_BUCKET || "your-project-id.appspot.com",
+});
+
+/* ================================
+   Express App
+================================ */
+const app = express();
+
+/* ================================
+   Security & Middleware
+================================ */
+app.use(helmet());
+
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://localhost:3000",
+      process.env.CLIENT_URL,
+    ],
+    credentials: true,
+  })
+);
+
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+/* ================================
+   Rate Limiters
+================================ */
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: "Too many requests from this IP, please try again later.",
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: "Too many authentication attempts, please try again later.",
+});
+
+app.use("/api", apiLimiter);
+
+/* ================================
+   Existing Routes
+================================ */
 const authRoutes = require("./routes/authRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const reminderRoutes = require("./routes/reminderRoutes");
 const attendanceRoutes = require("./routes/attendance");
 
-const { sendEventReminders } = require("./controllers/reminderController");
-
-const app = express();
-
-app.use(helmet());
-app.use(
-  cors({
-    origin: ["http://localhost:5173", "http://localhost:3000"],
-    credentials: true,
-  })
-);
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// ---------------- RATE LIMITERS ----------------
-
-// General API limiter
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 200,
-});
-
-// Auth limiter (login / register) - OTP rate limiting handled in authRoutes.js
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
-  message: "Too many authentication attempts. Try later.",
-});
-
-// ---------------- ROUTES ----------------
-
-app.use("/api", apiLimiter);
-
-// Auth routes (login, register, OTP) - OTP rate limiting handled in authRoutes.js
 app.use("/api/auth", authLimiter, authRoutes);
-
-// Other routes
 app.use("/api/profile", profileRoutes);
 app.use("/api/reminder", reminderRoutes);
 app.use("/api/attendance", attendanceRoutes);
 
+/* ================================
+   Discussion System Routes
+================================ */
+const discussionsRouter = require("./routes/discussions");
+const commentsRouter = require("./routes/comments");
+const uploadRouter = require("./routes/upload");
+
+app.use("/api/discussions", discussionsRouter);
+app.use("/api/comments", commentsRouter);
+app.use("/api/upload", uploadRouter);
+
+/* ================================
+   Health Check
+================================ */
 app.get("/api/health", (req, res) => {
-  res.json({ status: "OK" });
+  res.json({
+    status: "OK",
+    message: "Server is running",
+    timestamp: new Date().toISOString(),
+  });
 });
 
-// Cron
-cron.schedule("0 8 * * *", () => {
-  sendEventReminders().catch(console.error);
+/* ================================
+   Cron Job (Daily Reminder)
+================================ */
+const { sendEventReminders } = require("./controllers/reminderController");
+
+cron.schedule("0 8 * * *", async () => {
+  console.log("⏰ Running daily reminder job...");
+  try {
+    await sendEventReminders();
+  } catch (err) {
+    console.error("❌ Reminder cron error:", err);
+  }
 });
 
-// Error handler
+/* ================================
+   Global Error Handler
+================================ */
 app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(500).json({ success: false, message: "Server error" });
+  console.error("🔥 Error:", err);
+
+  if (err instanceof multer.MulterError) {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({
+        success: false,
+        message: "File too large. Maximum size is 10MB.",
+      });
+    }
+  }
+
+  res.status(err.status || 500).json({
+    success: false,
+    message:
+      process.env.NODE_ENV === "development"
+        ? err.message
+        : "Internal server error",
+  });
 });
 
-app.listen(5000, () => {
-  console.log("🚀 Server running on port 5000");
+/* ================================
+   404 Handler
+================================ */
+app.use("*", (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+  });
 });
+
+/* ================================
+   Server Start
+================================ */
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
+});
+
+module.exports = app;

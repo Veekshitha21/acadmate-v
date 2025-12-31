@@ -1,6 +1,22 @@
-import React from 'react';
+// components/ProtectedRoute.jsx
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const ProtectedRoute = ({ children, isAuthenticated, onLoginRequired }) => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // If not authenticated and this is a route-based navigation (no callback)
+    if (!isAuthenticated && !onLoginRequired) {
+      // Redirect to home after a brief delay to show the login prompt
+      const timer = setTimeout(() => {
+        navigate('/', { replace: true });
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, onLoginRequired, navigate]);
+
   // If user is not authenticated, show login prompt
   if (!isAuthenticated) {
     return (
@@ -21,14 +37,25 @@ const ProtectedRoute = ({ children, isAuthenticated, onLoginRequired }) => {
             
             <div className="space-y-3">
               <button
-                onClick={onLoginRequired}
+                onClick={() => {
+                  if (onLoginRequired) {
+                    // For legacy sections - trigger login modal
+                    onLoginRequired();
+                  } else {
+                    // For route-based navigation - go to home
+                    navigate('/', { replace: true });
+                  }
+                }}
                 className="w-full px-6 py-3 bg-accent text-brown font-semibold rounded-lg hover:bg-yellow-500 transition-colors duration-200 shadow-md"
               >
-                Login / Register
+                {onLoginRequired ? 'Login / Register' : 'Go to Home & Login'}
               </button>
               
               <p className="text-sm text-gray-500 mt-4">
-                Don't have an account? Click the button above to register!
+                {onLoginRequired 
+                  ? "Don't have an account? Click the button above to register!"
+                  : "You'll be redirected to home in 2 seconds..."
+                }
               </p>
             </div>
           </div>
