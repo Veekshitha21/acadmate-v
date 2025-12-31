@@ -22,6 +22,94 @@ function App() {
   const [showProfile, setShowProfile] = useState(false);
   const isNavigatingFromBrowser = React.useRef(false);
 
+    // When navigating to the Chatbot section, ensure the page is at the top
+    useEffect(() => {
+      if (activeSection === 'Chatbot') {
+        try {
+          // Disable automatic scroll restoration if available and jump to top
+          if ('scrollRestoration' in window.history) {
+            window.history.scrollRestoration = 'manual';
+          }
+          window.scrollTo({ top: 0, behavior: 'auto' });
+        } catch {}
+      }
+    }, [activeSection]);
+
+  const protectedSections = new Set([
+    'Seniors',
+    'TaskManager',
+    'EventBuddy',
+    'Chatbot',
+    'Study Materials',
+    'About Us',
+    'Profile',
+  ]);
+
+  const scrollToTop = () => {
+    try {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch {}
+  };
+
+  // Handlers
+  const handleLogin = (data) => {
+    setUserData(data);
+    setIsLoggedIn(true);
+    setIsLoginModalOpen(false);
+    setShowProfile(false);
+
+    const target = pendingSection || 'Home';
+    setActiveSection(target);
+    try { window.history.pushState({ section: target }, '', `#${target.replace(/\s+/g, '')}`); } catch {}
+    scrollToTop();
+
+    setPendingSection(null);
+  };
+  const handleShowProfile = () => {
+    setShowProfile(true);
+    setActiveSection('Profile');
+    try { window.history.pushState({ section: 'Profile' }, '', '#Profile'); } catch {}
+  };
+  const handleBackToHome = () => {
+    setShowProfile(false);
+    setActiveSection('Home');
+    try { window.history.pushState({ section: 'Home' }, '', '#Home'); } catch {}
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setUserData(null);
+    setShowProfile(false);
+    setActiveSection('Home');
+    try { window.history.pushState({ section: 'Home' }, '', '#Home'); } catch {}
+  };
+
+  const handleSectionChange = (section) => {
+    if (!isLoggedIn && protectedSections.has(section)) {
+      setPendingSection(section);
+      setIsLoginModalOpen(true);
+    }
+
+    if (section === activeSection) return;
+    
+    if (isNavigatingFromBrowser.current) {
+      if (section !== 'Profile') setShowProfile(false);
+      setActiveSection(section);
+      return;
+    }
+    
+    if (section !== 'Profile') setShowProfile(false);
+    setActiveSection(section);
+
+    const hash = `#${section.replace(/\s+/g, '')}`;
+    try { 
+      window.history.pushState({ section }, '', hash); 
+    } catch (e) {
+      console.error('Error pushing state:', e);
+    }
+    scrollToTop();
+  };
+
   const hashToSectionMap = {
     'Home': 'Home',
     'Seniors': 'Seniors',
