@@ -1,6 +1,6 @@
 // services/api.js
 import axios from "axios";
-import { auth } from "../firebase"; // your existing firebase config
+import { auth } from "../firebase";
 
 /* ================================
    Base URL
@@ -21,14 +21,14 @@ const api = axios.create({
 });
 
 /* ================================
-   Request Interceptor (Auth)
+   Request Interceptor (JWT + Firebase)
 ================================ */
 api.interceptors.request.use(
   async (config) => {
-    // 1️⃣ Firebase Auth token (for discussion system)
-    const user = auth.currentUser;
-    if (user) {
-      const firebaseToken = await user.getIdToken();
+    // 1️⃣ Firebase token (discussion system)
+    const firebaseUser = auth.currentUser;
+    if (firebaseUser) {
+      const firebaseToken = await firebaseUser.getIdToken();
       config.headers.Authorization = `Bearer ${firebaseToken}`;
       return config;
     }
@@ -51,7 +51,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.warn("Unauthorized access – redirecting to login");
+      console.warn("Unauthorized – redirecting to login");
+      localStorage.removeItem("token");
       window.location.href = "/login";
     }
     return Promise.reject(error);
@@ -59,12 +60,32 @@ api.interceptors.response.use(
 );
 
 /* ================================
-   AUTH & USER API (Old)
+   AUTH API
 ================================ */
 export const authAPI = {
-  register: (userData) => api.post("/auth/register", userData),
-  login: (credentials) => api.post("/auth/login", credentials),
-  getProfile: () => api.get("/auth/profile"),
+  sendOTP: (email) =>
+    api.post("/auth/send-otp", { email }),
+
+  verifyOTP: (email, otp) =>
+    api.post("/auth/verify-otp", { email, otp }),
+
+  sendForgotPasswordOTP: (email) =>
+    api.post("/auth/forgot-password/send-otp", { email }),
+
+  verifyForgotPasswordOTP: (email, otp) =>
+    api.post("/auth/forgot-password/verify-otp", { email, otp }),
+
+  resetPassword: (data) =>
+    api.post("/auth/forgot-password/reset", data),
+
+  register: (userData) =>
+    api.post("/auth/register", userData),
+
+  login: (credentials) =>
+    api.post("/auth/login", credentials),
+
+  getProfile: () =>
+    api.get("/auth/profile"),
 };
 
 /* ================================
@@ -92,16 +113,26 @@ export const attendanceAPI = {
 };
 
 /* ================================
-   DISCUSSION API (New)
+   DISCUSSION API
 ================================ */
 export const discussionAPI = {
-  getAll: (params) => api.get("/discussions", { params }),
+  getAll: (params) =>
+    api.get("/discussions", { params }),
+
   getById: (id, userId) =>
     api.get(`/discussions/${id}`, { params: { userId } }),
-  create: (data) => api.post("/discussions", data),
-  update: (id, data) => api.put(`/discussions/${id}`, data),
-  delete: (id) => api.delete(`/discussions/${id}`),
-  vote: (id) => api.post(`/discussions/${id}/vote`),
+
+  create: (data) =>
+    api.post("/discussions", data),
+
+  update: (id, data) =>
+    api.put(`/discussions/${id}`, data),
+
+  delete: (id) =>
+    api.delete(`/discussions/${id}`),
+
+  vote: (id) =>
+    api.post(`/discussions/${id}/vote`),
 };
 
 /* ================================
@@ -110,13 +141,19 @@ export const discussionAPI = {
 export const commentAPI = {
   getByDiscussion: (discussionId) =>
     api.get("/comments", { params: { discussionId } }),
-  create: (data) => api.post("/comments", data),
-  update: (id, data) => api.put(`/comments/${id}`, data),
-  delete: (id) => api.delete(`/comments/${id}`),
+
+  create: (data) =>
+    api.post("/comments", data),
+
+  update: (id, data) =>
+    api.put(`/comments/${id}`, data),
+
+  delete: (id) =>
+    api.delete(`/comments/${id}`),
 };
 
 /* ================================
-   FILE UPLOAD API (Firebase Storage)
+   FILE UPLOAD API
 ================================ */
 export const uploadAPI = {
   uploadFile: (file, discussionId) => {
@@ -125,12 +162,10 @@ export const uploadAPI = {
     formData.append("discussionId", discussionId || "temp");
 
     return api.post("/upload", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+      headers: { "Content-Type": "multipart/form-data" },
       onUploadProgress: (e) => {
         const percent = Math.round((e.loaded * 100) / e.total);
-        console.log(`Upload progress: ${percent}%`);
+        console.log(`Upload: ${percent}%`);
       },
     });
   },
@@ -140,7 +175,7 @@ export const uploadAPI = {
 };
 
 /* ================================
-   Health Check
+   HEALTH CHECK
 ================================ */
 export const healthAPI = {
   check: () => api.get("/health"),
