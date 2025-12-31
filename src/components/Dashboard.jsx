@@ -63,7 +63,7 @@ const Dashboard = ({ user, onLogout, onNavigate }) => {
                   {materialTypes.map(material => {
                     const handleClick = () => {
                       if (material.id === 'syllabus') {
-                        window.open('https://drive.google.com/file/d/1MCHK2uif5hiptlESsN6Ta6XQvYY3tEuS/view?usp=sharing', '_blank');
+                        window.open('https://drive.google.com/file/d/1KSbOSouZztykomnj4GA_sjqaNjaOyZ1p/view?usp=sharing', '_blank');
                       } else {
                         
                         // --- FIX: STRUCTURED URL ---
