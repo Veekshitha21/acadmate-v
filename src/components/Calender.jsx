@@ -28,7 +28,7 @@ const Calendar = ({ onBack }) => {
     if (!user) return;
     const fetchEvents = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/reminder/user/${user.id}`);
+        const res = await axios.get(`http://localhost:5001/api/reminder/user/${user.id}`);
         const data = Array.isArray(res.data.events) ? res.data.events : [];
 
         // 🧹 Auto-delete past events (before today)
@@ -41,7 +41,7 @@ const Calendar = ({ onBack }) => {
           if (eventDate < today) {
             // Delete expired event from backend
             try {
-              await axios.delete(`http://localhost:5000/api/reminder/${event.id}`);
+              await axios.delete(`http://localhost:5001/api/reminder/${event.id}`);
               console.log(`Deleted past event: ${event.title}`);
             } catch (err) {
               console.error(`Failed to delete past event ${event.id}:`, err);
