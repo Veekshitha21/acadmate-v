@@ -102,20 +102,32 @@ const DiscussionDetail = ({ isLoggedIn, userData }) => {
   const getFileIcon = (url) => {
     if (url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) return '🖼️';
     if (url.match(/\.pdf$/i)) return '📄';
+    if (url.match(/\.(doc|docx)$/i)) return '📝';
+    if (url.match(/\.(xls|xlsx)$/i)) return '📊';
     return '📎';
+  };
+
+  const openFileViewer = (index) => {
+    setFileViewerIndex(index);
+    setFileViewerOpen(true);
   };
 
   const renderFilePreview = (url, index) => {
     const isImage = url.match(/\.(jpg|jpeg|png|gif|webp)$/i);
-    const filename = url.split('/').pop();
+    const filename = url.split('/').pop().split('?')[0];
+    const decodedFilename = decodeURIComponent(filename);
 
     if (isImage) {
       return (
-        <div key={index} className="file-preview image-preview">
+        <div 
+          key={index} 
+          className="file-preview image-preview"
+          onClick={() => openFileViewer(index)}
+        >
           <img src={url} alt={`Attachment ${index + 1}`} />
-          <a href={url} target="_blank" rel="noopener noreferrer" className="view-full">
-            View Full Size
-          </a>
+          <div className="view-overlay">
+            <span className="view-text">Click to view</span>
+          </div>
         </div>
       );
     }
@@ -129,12 +141,13 @@ const DiscussionDetail = ({ isLoggedIn, userData }) => {
         className="file-attachment"
       >
         <span className="file-icon">{getFileIcon(url)}</span>
-        <span className="file-name">{decodeURIComponent(filename)}</span>
+        <span className="file-name">{decodedFilename}</span>
+        <span className="file-action">Open →</span>
       </a>
     );
   };
 
-   if (loading) {
+  if (loading) {
     return (
       <div className="discussion-detail-container">
         <div className="loading-state">
@@ -189,25 +202,32 @@ const DiscussionDetail = ({ isLoggedIn, userData }) => {
             ))}
           </div>
 
+          {/* Attachments */}
+          {discussion.fileUrls && discussion.fileUrls.length > 0 && (
+            <div className="discussion-attachments">
+              <h3>📎 Attachments ({discussion.fileUrls.length})</h3>
+              <div className="attachments-grid">
+                {discussion.fileUrls.map((url, index) => renderFilePreview(url, index))}
+              </div>
+            </div>
+          )}
+
           {/* ACTIONS ROW */}
           <div className="discussion-actions-bottom">
-            {/* Vote Pill */}
-            <div className="vote-pill">
-  <button
-    onClick={handleVote}
-    className={`vote-icon up ${hasVoted ? "active" : ""}`}
-    disabled={voting || !isLoggedIn}
-  >
-    ↑
-  </button>
-
-  <span className="vote-count">{discussion.voteCount || 0}</span>
-
-  <button className="vote-icon down" disabled>
-    ↓
-  </button>
-</div>
-
+            {/* Vote Button */}
+            <button
+              onClick={handleVote}
+              className={`vote-button-modern ${hasVoted ? "voted" : ""}`}
+              disabled={voting || !isLoggedIn}
+              title={hasVoted ? "Remove vote" : "Upvote"}
+            >
+              <div className="vote-icon-wrapper">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <span className="vote-count-modern">{discussion.voteCount || 0}</span>
+            </button>
 
             {/* Delete */}
             {canModify && (
@@ -216,7 +236,7 @@ const DiscussionDetail = ({ isLoggedIn, userData }) => {
                 onClick={handleDelete}
                 disabled={deleting}
               >
-                {deleting ? "..." : "🗑️ Delete"}
+                {deleting ? "Deleting..." : "🗑️ Delete"}
               </button>
             )}
           </div>

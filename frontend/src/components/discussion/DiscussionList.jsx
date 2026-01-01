@@ -161,9 +161,6 @@ const DiscussionList = ({ isLoggedIn, userData }) => {
                       ↑ {discussion.voteCount || 0}
                     </span>
                     <span className="stat-item">
-                      👁️ {(discussion.viewCount || 0).toLocaleString()}
-                    </span>
-                    <span className="stat-item">
                       💬 {discussion.commentCount || 0}
                     </span>
                     {discussion.fileUrls && discussion.fileUrls.length > 0 && (

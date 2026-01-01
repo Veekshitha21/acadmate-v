@@ -35,7 +35,11 @@ const sendOTP = async (req, res) => {
       console.error('Email sending error:', emailError);
       // Don't fail the request if email fails - log it for debugging
       // In production, you might want to handle this differently
-      throw new Error('Failed to send email. Please check email configuration.');
+      // For now, return success but note the email issue
+      return res.json({ 
+        message: 'OTP generated. Please check your email (note: email sending may have failed).',
+        email: normalizedEmail 
+      });
     }
 
     res.json({ 
@@ -151,22 +155,60 @@ const register = async (req, res) => {
 };
 
 // LOGIN
+// const login = async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
+//     const normalizedEmail = email.trim().toLowerCase();
+//     const usersRef = db.collection('users');
+//     const snapshot = await usersRef.where('email', '==', normalizedEmail).get();
+
+//     if (snapshot.empty) return res.status(400).json({ message: 'Invalid credentials' });
+
+//     const userDoc = snapshot.docs[0];
+//     const userData = userDoc.data();
+
+//     const valid = await bcrypt.compare(password, userData.password);
+//     if (!valid) return res.status(400).json({ message: 'Invalid credentials' });
+
+//     res.json({
+//       user: {
+//         id: userDoc.id,
+//         username: userData.username,
+//         usn: userData.usn,
+//         branch: userData.branch,
+//         section: userData.section,
+//         email: userData.email,
+//         phone: userData.phone,
+//       },
+//       token: generateToken(userDoc.id),
+//     });
+//   } catch (err) {
+//     console.error('Login failed:', err);
+//     res.status(500).json({ message: 'Login failed' });
+//   }
+// };
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    if (!email || !password)
+      return res.status(400).json({ success: false, message: "Email and password required" });
+
     const normalizedEmail = email.trim().toLowerCase();
     const usersRef = db.collection('users');
     const snapshot = await usersRef.where('email', '==', normalizedEmail).get();
 
-    if (snapshot.empty) return res.status(400).json({ message: 'Invalid credentials' });
+    if (snapshot.empty) return res.status(400).json({ success: false, message: 'Invalid credentials' });
 
     const userDoc = snapshot.docs[0];
     const userData = userDoc.data();
 
     const valid = await bcrypt.compare(password, userData.password);
-    if (!valid) return res.status(400).json({ message: 'Invalid credentials' });
+    if (!valid) return res.status(400).json({ success: false, message: 'Invalid credentials' });
 
     res.json({
+      success: true,
+      token: generateToken(userDoc.id),
       user: {
         id: userDoc.id,
         username: userData.username,
@@ -176,13 +218,13 @@ const login = async (req, res) => {
         email: userData.email,
         phone: userData.phone,
       },
-      token: generateToken(userDoc.id),
     });
   } catch (err) {
-    console.error('Login failed:', err);
-    res.status(500).json({ message: 'Login failed' });
+    console.error("🔥 Login error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
 
 // FORGOT PASSWORD - SEND OTP
 const sendForgotPasswordOTP = async (req, res) => {
@@ -215,7 +257,12 @@ const sendForgotPasswordOTP = async (req, res) => {
       await sendOTPEmail(normalizedEmail, otp);
     } catch (emailError) {
       console.error('Email sending error:', emailError);
-      throw new Error('Failed to send email. Please check email configuration.');
+      // Don't fail the request if email fails - log it for debugging
+      // For security, still return success message
+      return res.json({ 
+        message: 'If the email exists, OTP has been sent to your email (note: email sending may have failed)',
+        email: normalizedEmail 
+      });
     }
 
     res.json({ 

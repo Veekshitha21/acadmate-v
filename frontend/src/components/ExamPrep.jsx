@@ -1,49 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
-import Lottie from "lottie-react";
-
-// Hero card shown on EduBoat page. Contains an animation slot you can attach.
-export const ExamPrepCard = () => {
-  const [animData, setAnimData] = useState(null);
-  useEffect(() => {
-    fetch("/animations/examPrep.json")
-      .then((r) => r.json())
-      .then(setAnimData)
-      .catch(() => setAnimData(null));
-  }, []);
-  return (
-    <div className="hero-card examprep-card">
-      <div className="hero-content">
-        <div className="hero-text">
-          <p className="hero-eyebrow">Meet the</p>
-          <h2 className="hero-title">ExamPrep!</h2>
-          <p className="hero-sub">Structured guidance to ace your tests.</p>
-        </div>
-        <div className="hero-animation" aria-label="animation-slot" data-slot="examprep-animation">
-          {animData ? (
-            <Lottie animationData={animData} loop autoplay style={{ width: "100%", height: "100%" }} />
-          ) : null}
-        </div>
-      </div>
-      <div className="hero-cta">
-        <span>Get Started</span>
-        <span className="cta-arrow">›</span>
-      </div>
-      <style>{`
-        .hero-card { position: relative; width: 340px; height: 600px; border-radius: 28px; padding: 20px; background: linear-gradient(135deg, var(--white), var(--beige)); color: var(--brown); box-shadow: 0 20px 46px rgba(26, 18, 0, 0.15); overflow: hidden; border: 1px solid var(--beige-footer); }
-        .hero-card:before { content: ""; position: absolute; inset: 1px; border-radius: 26px; background: linear-gradient(180deg, rgba(0,0,0,0.03), rgba(0,0,0,0)); pointer-events: none; }
-        .hero-content { display: grid; grid-template-rows: auto 1fr; height: calc(100% - 84px); gap: 12px; }
-        .hero-text { padding: 6px 4px; }
-        .hero-eyebrow { margin: 0; font-size: 1.05rem; color: var(--brown); opacity: 0.8; }
-        .hero-title { margin: 2px 0 6px 0; font-size: 2.2rem; font-weight: 900; color: var(--accent); }
-        .hero-sub { margin: 0; color: var(--brown); opacity: 0.9; font-size: 1rem; }
-        .hero-animation { align-self: end; justify-self: center; width: 260px; height: 320px; border-radius: 22px; background: transparent; box-shadow: none; display: flex; align-items: center; justify-content: center; }
-        .hero-cta { position: absolute; bottom: 16px; left: 16px; right: 16px; height: 60px; border-radius: 18px; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 800; background: var(--accent); color: var(--brown); box-shadow: 0 10px 24px rgba(244, 179, 12, 0.35); }
-        .cta-arrow { font-size: 1.6rem; line-height: 1; }
-        .examprep-card .hero-title { color: var(--accent); }
-      `}</style>
-    </div>
-  );
-};
+import React, { useState, useEffect, useRef } from "react";
 
 const ExamPrep = () => {
   const [messages, setMessages] = useState([
@@ -51,223 +6,200 @@ const ExamPrep = () => {
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const chatboxRef = useRef(null);
+  const bottomRef = useRef(null);
 
   const sendMessage = async () => {
-  if (!input.trim()) return;
+    if (!input.trim()) return;
 
-  // Add user message immediately
-  setMessages((prev) => [...prev, { type: "user", text: input }]);
-  const userInput = input;
-  setInput("");
-  setIsTyping(true);
+    setMessages((prev) => [...prev, { type: "user", text: input }]);
+    const userInput = input;
+    setInput("");
+    setIsTyping(true);
 
-  try {
-    // 🔗 Connect to your FastAPI backend
-  const response = await fetch("http://127.0.0.1:8000/ask", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    question: questionText,
-    marks: marksNum,
-    top_k: 5,
-    temperature: 0.3
-  })
-});
+    try {
+      const response = await fetch("http://127.0.0.1:8000/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: userInput }),
+      });
 
+      const data = await response.json();
 
-    if (!res.ok) {
-      throw new Error("Server error");
+      setMessages((prev) => [
+        ...prev,
+        { type: "bot", text: data.answer || "No response from AI." },
+      ]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { type: "bot", text: "⚠️ Error: Failed to fetch response." },
+      ]);
+    } finally {
+      setIsTyping(false);
     }
+  };
 
-    const data = await res.json();
-
-    // Add bot reply
-    setMessages((prev) => [
-      ...prev,
-      { type: "bot", text: data.answer || "No response from AI." },
-    ]);
-  } catch (error) {
-    // Handle failure gracefully
-    setMessages((prev) => [
-      ...prev,
-      { type: "bot", text: "⚠️ Error: Could not fetch answer from server." },
-    ]);
-  } finally {
-    setIsTyping(false);
-  }
-};
-
-
-  // Scroll to bottom
+  // Scroll whole page like ChatGPT
   useEffect(() => {
-    if (chatboxRef.current) {
-      chatboxRef.current.scrollTop = chatboxRef.current.scrollHeight;
-    }
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-        background: "linear-gradient(135deg, #fbf9f1, #fdfcf8)",
-        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-      }}
-    >
+    <div className="page">
       {/* Header */}
-      <header
-        style={{
-          padding: "1rem",
-          textAlign: "center",
-          fontSize: "1.7rem",
-          fontWeight: "bold",
-          background: "linear-gradient(135deg, #a18cd1, #fbc2eb)",
-          color: "white",
-          letterSpacing: "1px",
-          boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-          borderBottomLeftRadius: "12px",
-          borderBottomRightRadius: "12px",
-        }}
-      >
-        📘 ExamPrep
+      <header className="exam-header">
+        <h1>ExamPrep</h1>
+        <p>Structured answers and strategies for exam success</p>
       </header>
 
-      {/* Chatbox */}
-      <div
-        ref={chatboxRef}
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          padding: "1rem",
-          overflowY: "auto",
-          gap: "0.5rem",
-        }}
-      >
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            className="chat-message"
-            style={{
-              alignSelf: msg.type === "user" ? "flex-end" : "flex-start",
-              background:
-                msg.type === "user"
-                  ? "linear-gradient(135deg, #667eea, #5a67f2)"
-                  : "#ddd9c5",
-              color: msg.type === "user" ? "white" : "black",
-              padding: "0.8rem 1rem",
-              borderRadius: "12px",
-              maxWidth: "70%",
-              boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
-            }}
-          >
-            {msg.text}
+      {/* Messages */}
+      <main className="chat-area">
+        {messages.map((msg, i) => (
+          <div key={i} className={`msg ${msg.type}`}>
+            <div className="bubble">{msg.text}</div>
           </div>
         ))}
 
         {isTyping && (
-          <div
-            style={{
-              alignSelf: "flex-start",
-              padding: "0.6rem 1rem",
-              borderRadius: "12px",
-              background: "#ddd9c5",
-              color: "black",
-              fontStyle: "italic",
-              fontSize: "0.9rem",
-              boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
-              display: "flex",
-              gap: "2px",
-            }}
-          >
-            <span>Bot is typing</span>
-            <span className="typing-dot">.</span>
-            <span className="typing-dot">.</span>
-            <span className="typing-dot">.</span>
+          <div className="msg bot">
+            <div className="bubble typing">Thinking...</div>
           </div>
         )}
-      </div>
 
-      {/* Input Area */}
-      <div
-        style={{
-          display: "flex",
-          borderTop: "1px solid #ccc",
-          padding: "0.5rem",
-          background: "white",
-          boxShadow: "0 -2px 10px rgba(0,0,0,0.05)",
-        }}
-      >
+        <div ref={bottomRef} />
+      </main>
+
+      {/* Input */}
+      <footer className="input-bar">
         <input
-          type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-          placeholder="Type your question..."
-          style={{
-            flex: 1,
-            padding: "0.7rem",
-            border: "1px solid #ccc",
-            borderRadius: "12px",
-            outline: "none",
-            boxShadow: "inset 0 2px 4px rgba(0,0,0,0.05)",
-            transition: "box-shadow 0.3s ease",
-          }}
-          onFocus={(e) => (e.target.style.boxShadow = "0 0 5px #667eea")}
-          onBlur={(e) =>
-            (e.target.style.boxShadow = "inset 0 2px 4px rgba(0,0,0,0.05)")
-          }
+          placeholder="Ask ExamPrep anything..."
         />
-        <button
-          onClick={sendMessage}
-          style={{
-            marginLeft: "0.5rem",
-            padding: "0.7rem 1.2rem",
-            border: "none",
-            borderRadius: "12px",
-            background: "linear-gradient(135deg, #f4b30c, #f4a700)",
-            color: "white",
-            fontWeight: "bold",
-            cursor: "pointer",
-            boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-            transition: "transform 0.2s ease",
-          }}
-          onMouseEnter={(e) => (e.target.style.transform = "scale(1.05)")}
-          onMouseLeave={(e) => (e.target.style.transform = "scale(1)")}
-        >
-          Send
-        </button>
-      </div>
+        <button onClick={sendMessage}>Send</button>
+      </footer>
 
-      {/* Animations */}
-      <style>
-        {`
-          .chat-message {
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 0.4s forwards;
-          }
+      {/* Styles */}
+      <style>{`
+        * {
+          box-sizing: border-box;
+        }
 
-          @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
+        body {
+          margin: 0;
+        }
 
-          .typing-dot {
-            animation: blink 1s infinite;
-          }
+        .page {
+          min-height: 100vh;
+          background: #f7f7f8;
+          font-family: system-ui, -apple-system, BlinkMacSystemFont;
+          padding-bottom: 80px;
+        }
 
-          .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-          .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        /* Header (ChatGPT-like) */
+        .exam-header {
+          padding: 12px 20px;
+          border-bottom: 1px solid #e5e5e5;
+          background: #fff;
+          position: sticky;
+          top: 0;
+          z-index: 10;
+        }
 
-          @keyframes blink {
-            0%, 20%, 50%, 80%, 100% { opacity: 0; }
-            10%, 30%, 60%, 90% { opacity: 1; }
-          }
-        `}
-      </style>
+        .exam-header h1 {
+          font-size: 1.2rem;
+          margin: 0;
+          font-weight: 600;
+        }
+
+        .exam-header p {
+          margin: 2px 0 0;
+          font-size: 0.85rem;
+          color: #6b7280;
+        }
+
+        /* Chat Area (NO inner scroll) */
+        .chat-area {
+          padding: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .msg {
+          display: flex;
+        }
+
+        .msg.user {
+          justify-content: flex-end;
+        }
+
+        .msg.bot {
+          justify-content: flex-start;
+        }
+
+        .bubble {
+          max-width: 70%;
+          padding: 12px 14px;
+          border-radius: 12px;
+          font-size: 0.95rem;
+          line-height: 1.5;
+        }
+
+        .user .bubble {
+          background: #4f46e5;
+          color: #fff;
+          border-bottom-right-radius: 4px;
+        }
+
+        .bot .bubble {
+          background: #e5e7eb;
+          color: #111;
+          border-bottom-left-radius: 4px;
+        }
+
+        .typing {
+          font-style: italic;
+          opacity: 0.8;
+        }
+
+        /* Input Bar */
+        .input-bar {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          display: flex;
+          gap: 10px;
+          padding: 12px;
+          background: #fff;
+          border-top: 1px solid #e5e5e5;
+        }
+
+        .input-bar input {
+          flex: 1;
+          padding: 10px 14px;
+          border-radius: 10px;
+          border: 1px solid #d1d5db;
+          font-size: 0.95rem;
+          outline: none;
+        }
+
+        .input-bar button {
+          padding: 10px 16px;
+          border-radius: 10px;
+          border: none;
+          background: #4f46e5;
+          color: white;
+          font-weight: 500;
+          cursor: pointer;
+        }
+
+        .input-bar button:hover {
+          background: #4338ca;
+        }
+      `}</style>
     </div>
   );
 };

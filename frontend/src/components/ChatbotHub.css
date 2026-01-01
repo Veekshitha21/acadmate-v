@@ -153,6 +153,7 @@
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   max-width: 1200px;
   margin: 0 auto;
+  position: relative;
 }
 
 /* Header */
@@ -163,6 +164,16 @@
   position: relative;
 }
 
+/* When ExamPrep mode is active, adjust header padding to accommodate fixed header */
+.chatbot-hub:has(.examprep-header-left) .chatbot-header {
+  padding-top: 4rem;
+}
+
+/* Add padding to chatbox to account for fixed header */
+.chatbot-hub:has(.examprep-header-left) .chatbox {
+  padding-top: calc(60px + 0.75rem);
+}
+
 .chatbot-header h1 {
   margin: 0.5rem 0 1rem 0;
   font-size: 3rem;
@@ -170,6 +181,36 @@
   letter-spacing: 2px;
   color: var(--accent);
   position: relative;
+}
+
+/* ExamPrep header in left upper corner - fixed */
+.examprep-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: fixed;
+  top: calc(var(--navbar-height, 64px));
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--beige);
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid rgba(244, 179, 12, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  width: 100%;
+}
+
+.examprep-animation-small {
+  width: 40px;
+  height: 40px;
+}
+
+.examprep-title-small {
+  font-size: 1.2rem !important;
+  margin: 0 !important;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--accent);
 }
 
 .chatbot-subtitle {
@@ -274,22 +315,21 @@
   flex-direction: column;
   background: transparent;
   backdrop-filter: none;
-  max-height: 70vh;
   border-radius: 0;
   margin: 0;
   box-shadow: none;
   border: none;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .chatbox .messages-container {
   flex: 1;
-  overflow-y: auto;
+  overflow: visible;
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
-  padding: 2rem 2rem 1rem 2rem;
+  padding: 2rem 2rem 6rem 2rem;
 }
 
 .type-message-card {
@@ -354,6 +394,23 @@
   color: var(--brown);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-bottom-left-radius: 6px;
+}
+
+/* Welcome text - plain text, not a chat bubble */
+.welcome-text {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: var(--brown);
+  padding: 2rem 1rem;
+  margin: 4rem auto 2rem auto;
+  width: 100%;
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+.welcome-text.fading-out {
+  opacity: 0;
 }
 
 /* Structured content inside bot replies */
@@ -525,28 +582,39 @@
   animation-delay: 0.4s;
 }
 
-/* Input Area */
+/* Input Area - Fixed at bottom */
 .input-area {
   display: flex;
-  padding: 1.5rem 2rem 2rem 2rem;
-  background: transparent;
-  gap: 1rem;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  gap: 0.75rem;
   margin: 0;
   border-top: 1px solid rgba(244, 179, 12, 0.2);
   flex-shrink: 0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .message-input {
   flex: 1;
-  padding: 1rem 1.2rem;
+  padding: 0.875rem 1.2rem;
   border: 2px solid rgba(244, 179, 12, 0.2);
-  border-radius: 50px;
+  border-radius: 12px;
   outline: none;
   font-size: 1rem;
   transition: all 0.3s ease;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.9);
   color: var(--brown);
-  backdrop-filter: blur(5px);
 }
 
 .message-input:focus {
@@ -561,31 +629,36 @@
   font-style: italic;
 }
 
-.send-button {
-  padding: 1rem 1.5rem;
+.send-button-circle {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
   border: none;
-  border-radius: 50px;
+  border-radius: 50%;
   background: linear-gradient(135deg, var(--accent), #ff8c42);
   color: white;
-  font-weight: bold;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-size: 1rem;
-  box-shadow: 0 4px 15px rgba(244, 179, 12, 0.3);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(244, 179, 12, 0.3);
+  padding: 0;
 }
 
-.send-button:hover {
+.send-button-circle:hover {
   background: linear-gradient(135deg, #ff8c42, var(--accent));
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(244, 179, 12, 0.4);
+  box-shadow: 0 6px 16px rgba(244, 179, 12, 0.4);
 }
 
-.send-button::after {
-  content: '✨';
-  font-size: 1rem;
+.send-button-circle:active {
+  transform: translateY(0);
+}
+
+.send-button-circle svg {
+  width: 20px;
+  height: 20px;
 }
 
 .send-button:active {
@@ -595,24 +668,25 @@
 /* Marks Selection Styles */
 .marks-selection-container {
   position: relative;
-  margin-right: 0.5rem;
+  flex-shrink: 0;
 }
 
 .marks-button {
-  padding: 0.7rem 1rem;
-  border: 2px solid var(--accent);
+  padding: 0.75rem 1rem;
+  border: 2px solid rgba(244, 179, 12, 0.3);
   border-radius: 12px;
-  background: white;
+  background: rgba(255, 255, 255, 0.9);
   color: var(--accent);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 0.9rem;
-  min-width: 80px;
+  min-width: 90px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.3rem;
+  white-space: nowrap;
 }
 
 .marks-button:hover {
@@ -634,7 +708,7 @@
 
 .marks-dropdown {
   position: absolute;
-  bottom: 100%;
+  bottom: calc(100% + 0.5rem);
   left: 0;
   right: 0;
   background: white;
@@ -642,7 +716,6 @@
   border-radius: 12px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
   z-index: 1000;
-  margin-bottom: 0.5rem;
   overflow: hidden;
   animation: dropdownSlide 0.3s ease;
 }
@@ -783,9 +856,15 @@
     font-size: 0.9rem;
   }
 
-  .send-button {
-    padding: 0.7rem 1.2rem;
-    font-size: 0.9rem;
+  .send-button-circle {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+  }
+  
+  .send-button-circle svg {
+    width: 18px;
+    height: 18px;
   }
 }
 
@@ -798,8 +877,7 @@
   }
 
   .chatbox {
-    /* let chatbox grow to use available viewport height */
-    max-height: calc(100vh - 160px);
+    /* Remove max-height constraint to allow browser scroll */
   }
 
   .chatbox .messages-container {
@@ -807,17 +885,43 @@
     /* leave extra space at bottom so last messages are not hidden behind the sticky input */
     padding-bottom: 7rem;
   }
+  
+  .examprep-header-left {
+    top: calc(var(--navbar-height, 64px));
+    padding: 0.5rem 0.8rem;
+    width: 100%;
+  }
+  
+  .chatbot-hub:has(.examprep-header-left) .chatbox {
+    padding-top: calc(50px + 0.5rem);
+  }
+  
+  .examprep-animation-small {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .examprep-title-small {
+    font-size: 1rem !important;
+  }
 
-  /* Make input area sticky at bottom for easier access */
+  /* Make input area fixed at bottom for easier access */
   .input-area {
-    position: sticky;
+    position: fixed;
     bottom: 0;
-    background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.9));
-    padding: 0.8rem;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 0.75rem 1rem;
     gap: 0.6rem;
-    z-index: 30;
+    z-index: 50;
     display: flex;
     align-items: center;
+    border-radius: 16px 16px 0 0;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
   }
 
   .message-input {
@@ -863,9 +967,9 @@
 
   /* Ensure dropdown opens above input on mobile */
   .marks-dropdown {
-    left: auto;
-    right: 0;
-    bottom: 56px; /* above the input area */
+    left: 0;
+    right: auto;
+    bottom: calc(100% + 0.5rem);
     width: auto;
     min-width: 120px;
   }
@@ -922,11 +1026,16 @@
     flex: 1 1 auto;
   }
 
-  .send-button {
-    padding: 0.6rem 1rem;
-    font-size: 0.9rem;
-    flex: 0 0 64px;
-    min-width: 64px;
+  .send-button-circle {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    flex: 0 0 40px;
+  }
+  
+  .send-button-circle svg {
+    width: 18px;
+    height: 18px;
   }
 
   .marks-selection-container {

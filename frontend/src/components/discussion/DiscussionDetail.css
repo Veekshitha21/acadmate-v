@@ -31,6 +31,88 @@
   gap: 0.5rem;
 }
 
+/* Modern Vote Button */
+.discussion-actions-bottom {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.vote-button-modern {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background: #f3f4f6;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  min-width: 80px;
+  justify-content: center;
+}
+
+.vote-button-modern:hover:not(:disabled) {
+  background: #e5e7eb;
+  border-color: #d1d5db;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.vote-button-modern:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.vote-button-modern.voted {
+  background: linear-gradient(135deg, #f4b30c 0%, #e6a80b 100%);
+  border-color: #f4b30c;
+  color: #1a1200;
+}
+
+.vote-button-modern.voted:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e6a80b 0%, #d4970a 100%);
+  border-color: #e6a80b;
+  box-shadow: 0 4px 12px rgba(244, 179, 12, 0.3);
+}
+
+.vote-button-modern:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.vote-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: all 0.2s ease;
+}
+
+.vote-button-modern.voted .vote-icon-wrapper {
+  color: #1a1200;
+}
+
+.vote-button-modern:hover:not(:disabled) .vote-icon-wrapper {
+  color: #374151;
+}
+
+.vote-count-modern {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #374151;
+  transition: color 0.2s ease;
+}
+
+.vote-button-modern.voted .vote-count-modern {
+  color: #1a1200;
+}
+
 .delete-btn {
   padding: 0.5rem 1rem;
   background: #fee2e2;
@@ -166,41 +248,47 @@
   font-size: 1rem;
   line-height: 1.7;
   color: #374151;
-  margin-bottom: 2rem;
+  margin-bottom: 0.75rem;
   white-space: pre-wrap;
 }
 
 .discussion-body p {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.discussion-body p:last-child {
+  margin-bottom: 0;
 }
 
 /* Attachments */
 .discussion-attachments {
-  margin-top: 2rem;
-  padding: 1.5rem;
-  background: #f9fafb;
-  border-radius: 0.75rem;
+  margin-top: 1rem;
+  padding: 0.75rem 0;
+  background: transparent;
+  border-radius: 0;
 }
 
 .discussion-attachments h3 {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  color: #374151;
-  margin-bottom: 1rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
 }
 
 .attachments-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .file-preview {
   position: relative;
-  border-radius: 0.5rem;
+  border-radius: 6px;
   overflow: hidden;
   background: white;
   border: 1px solid #e5e7eb;
+  width: fit-content;
+  max-width: 300px;
 }
 
 .file-preview.image-preview {
@@ -219,7 +307,8 @@
 
 .file-preview img {
   width: 100%;
-  height: 200px;
+  max-width: 300px;
+  height: 150px;
   object-fit: cover;
   display: block;
 }
@@ -247,40 +336,47 @@
 .file-attachment {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: white;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: #f9fafb;
   border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
+  border-radius: 6px;
   text-decoration: none;
   color: inherit;
   transition: all 0.2s;
   cursor: pointer;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .file-attachment:hover {
-  background: #f9fafb;
-  border-color: #3b82f6;
+  background: #f3f4f6;
+  border-color: #d1d5db;
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .file-icon {
-  font-size: 1.5rem;
+  font-size: 1rem;
   flex-shrink: 0;
 }
 
 .file-name {
   flex: 1;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #374151;
   word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 300px;
 }
 
 .file-action {
-  font-size: 0.8rem;
-  color: #3b82f6;
+  font-size: 0.75rem;
+  color: #6b7280;
   font-weight: 500;
+  flex-shrink: 0;
 }
 
 /* Loading & Error States */

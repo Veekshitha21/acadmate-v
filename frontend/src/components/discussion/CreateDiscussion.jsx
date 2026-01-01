@@ -2,16 +2,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { discussionAPI } from '../../services/discussionAPI';
+import { Eye, X, Upload, File, Image as ImageIcon, FileText } from 'lucide-react';
 import './CreateDiscussion.css';
 
 const CreateDiscussion = ({ userData, isLoggedIn }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [files, setFiles] = useState([]);
+  const [uploadedFiles, setUploadedFiles] = useState([]); // Track uploaded files with URLs
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [uploadProgress, setUploadProgress] = useState({});
+  const [viewerFile, setViewerFile] = useState(null); // For file preview
   
   const navigate = useNavigate();
 
@@ -40,39 +43,85 @@ const CreateDiscussion = ({ userData, isLoggedIn }) => {
 
   const removeFile = (index) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
+    // Also remove from uploaded files if already uploaded
+    if (uploadedFiles[index]) {
+      setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    }
   };
 
   const uploadFiles = async () => {
-    // TODO: Implement file upload to Firebase Storage or your server
     const uploadedUrls = [];
+    
+    // Get and validate token
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      setError('You must be logged in to upload files. Please log in again.');
+      throw new Error('No authentication token found');
+    }
+    
+    console.log('🔑 Token preview:', token.substring(0, 20) + '...');
+    
+    // Get backend URL
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
     
     for (let i = 0; i < files.length; i++) {
       try {
         setUploadProgress(prev => ({ ...prev, [i]: 0 }));
         
-        // Simulated upload - replace with actual Firebase Storage upload
-        // Example with Firebase Storage:
-        // const storageRef = storage.ref(`discussions/${Date.now()}_${files[i].name}`);
-        // const uploadTask = storageRef.put(files[i]);
-        // 
-        // uploadTask.on('state_changed',
-        //   (snapshot) => {
-        //     const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        //     setUploadProgress(prev => ({ ...prev, [i]: progress }));
-        //   }
-        // );
-        // 
-        // await uploadTask;
-        // const url = await storageRef.getDownloadURL();
-        // uploadedUrls.push(url);
+        const formData = new FormData();
+        formData.append('file', files[i]);
+        formData.append('discussionId', 'temp');
         
-        // For now, just simulate:
-        for (let progress = 0; progress <= 100; progress += 20) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-          setUploadProgress(prev => ({ ...prev, [i]: progress }));
+        console.log(`📤 Uploading ${i + 1}/${files.length}:`, files[i].name);
+        
+        // Upload to your backend
+        const response = await fetch(`${API_URL}/api/upload`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        console.log(`📡 Response status:`, response.status);
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('❌ Upload error:', errorData);
+          
+          // Handle specific errors
+          if (response.status === 401 || response.status === 403) {
+            setError('Authentication failed. Please log in again.');
+            throw new Error('Authentication failed');
+          }
+          
+          throw new Error(errorData.error || `Upload failed with status ${response.status}`);
         }
+
+        const data = await response.json();
+        console.log('✅ Upload success:', data.fileName);
         
-        uploadedUrls.push(`https://placeholder.com/${files[i].name}`);
+        setUploadProgress(prev => ({ ...prev, [i]: 100 }));
+        
+        uploadedUrls.push({
+          url: data.url,
+          fileName: data.fileName,
+          fileSize: data.fileSize,
+          mimeType: data.mimeType,
+          path: data.path,
+          viewType: data.viewType
+        });
+        
+        // Update uploaded files state for preview
+        setUploadedFiles(prev => [...prev, {
+          url: data.url,
+          fileName: data.fileName,
+          fileSize: data.fileSize,
+          mimeType: data.mimeType,
+          path: data.path,
+          viewType: data.viewType
+        }]);
         
       } catch (err) {
         console.error(`Error uploading ${files[i].name}:`, err);
@@ -100,20 +149,23 @@ const CreateDiscussion = ({ userData, isLoggedIn }) => {
       setSubmitting(true);
       setError(null);
 
-      let fileUrls = [];
+      let fileData = [];
 
       // Upload files if any
-      if (files.length > 0) {
+      if (files.length > 0 && uploadedFiles.length === 0) {
         setUploading(true);
-        fileUrls = await uploadFiles();
+        fileData = await uploadFiles();
         setUploading(false);
+      } else {
+        fileData = uploadedFiles;
       }
 
       // Create discussion
       const discussionData = {
         title: title.trim(),
         content: content.trim(),
-        fileUrls,
+        fileUrls: fileData.map(f => f.url),
+        files: fileData, // Include full file metadata
       };
 
       const response = await discussionAPI.create(discussionData);
@@ -129,6 +181,38 @@ const CreateDiscussion = ({ userData, isLoggedIn }) => {
       setSubmitting(false);
       setUploading(false);
     }
+  };
+
+  const handleViewFile = (file, index) => {
+    // If file is already uploaded, use the uploaded URL
+    if (uploadedFiles[index]) {
+      setViewerFile(uploadedFiles[index]);
+    } else {
+      // Create temporary URL for local file preview
+      const tempUrl = URL.createObjectURL(files[index]);
+      setViewerFile({
+        url: tempUrl,
+        fileName: file.name,
+        mimeType: file.type,
+        viewType: getFileType(file.type),
+        isTemp: true
+      });
+    }
+  };
+
+  const getFileType = (mimeType) => {
+    if (mimeType.startsWith('image/')) return 'image';
+    if (mimeType === 'application/pdf') return 'pdf';
+    if (mimeType.startsWith('text/')) return 'text';
+    return 'file';
+  };
+
+  const getFileIcon = (mimeType) => {
+    const type = getFileType(mimeType);
+    if (type === 'image') return <ImageIcon className="w-4 h-4" />;
+    if (type === 'pdf') return <FileText className="w-4 h-4" />;
+    if (type === 'text') return <FileText className="w-4 h-4" />;
+    return <File className="w-4 h-4" />;
   };
 
   const formatFileSize = (bytes) => {
@@ -215,10 +299,16 @@ const CreateDiscussion = ({ userData, isLoggedIn }) => {
               {files.map((file, index) => (
                 <div key={index} className="file-item">
                   <div className="file-info">
-                    <span className="file-name">{file.name}</span>
-                    <span className="file-size">{formatFileSize(file.size)}</span>
+                    <div className="file-icon">
+                      {getFileIcon(file.type)}
+                    </div>
+                    <div className="file-details">
+                      <span className="file-name">{file.name}</span>
+                      <span className="file-size">{formatFileSize(file.size)}</span>
+                    </div>
                   </div>
-                  {uploadProgress[index] !== undefined && (
+                  
+                  {uploadProgress[index] !== undefined && uploadProgress[index] < 100 && (
                     <div className="upload-progress">
                       <div 
                         className="progress-bar" 
@@ -226,15 +316,30 @@ const CreateDiscussion = ({ userData, isLoggedIn }) => {
                       />
                     </div>
                   )}
-                  {!submitting && (
+                  
+                  <div className="file-actions">
+                    {uploadedFiles[index] && (
+                      <span className="upload-status">✓ Uploaded</span>
+                    )}
                     <button
                       type="button"
-                      onClick={() => removeFile(index)}
-                      className="remove-file-btn"
+                      onClick={() => handleViewFile(file, index)}
+                      className="view-file-btn"
+                      title="Preview file"
                     >
-                      ×
+                      <Eye className="w-4 h-4" />
                     </button>
-                  )}
+                    {!submitting && (
+                      <button
+                        type="button"
+                        onClick={() => removeFile(index)}
+                        className="remove-file-btn"
+                        title="Remove file"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -266,6 +371,156 @@ const CreateDiscussion = ({ userData, isLoggedIn }) => {
           </button>
         </div>
       </form>
+
+      {/* File Viewer Modal */}
+      {viewerFile && (
+        <FileViewer
+          file={viewerFile}
+          onClose={() => {
+            if (viewerFile.isTemp) {
+              URL.revokeObjectURL(viewerFile.url);
+            }
+            setViewerFile(null);
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+/* ============================
+   FILE VIEWER COMPONENT
+============================ */
+const FileViewer = ({ file, onClose }) => {
+  const renderContent = () => {
+    const viewType = file.viewType || getFileType(file.mimeType);
+
+    if (viewType === 'image') {
+      return (
+        <img
+          src={file.url}
+          alt={file.fileName}
+          className="max-w-full max-h-full object-contain"
+          onContextMenu={(e) => e.preventDefault()}
+          draggable={false}
+        />
+      );
+    }
+
+    if (viewType === 'pdf') {
+      return (
+        <iframe
+          src={file.url}
+          title={file.fileName}
+          className="w-full h-full border-0"
+          sandbox="allow-scripts allow-same-origin"
+        />
+      );
+    }
+
+    if (viewType === 'text') {
+      return (
+        <iframe
+          src={file.url}
+          title={file.fileName}
+          className="w-full h-full border-0 bg-white"
+        />
+      );
+    }
+
+    return (
+      <div className="text-center text-gray-400">
+        <p>Preview not available</p>
+        <button
+          onClick={() => window.open(file.url, '_blank')}
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Open in New Tab
+        </button>
+      </div>
+    );
+  };
+
+  const getFileType = (mimeType) => {
+    if (mimeType.startsWith('image/')) return 'image';
+    if (mimeType === 'application/pdf') return 'pdf';
+    if (mimeType.startsWith('text/')) return 'text';
+    return 'file';
+  };
+
+  return (
+    <div 
+      className="fixed inset-0 z-50 bg-black bg-opacity-90 flex flex-col"
+      onClick={onClose}
+      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+    >
+      {/* Header */}
+      <div 
+        className="bg-gray-900 text-white p-4 flex justify-between items-center"
+        onClick={(e) => e.stopPropagation()}
+        style={{ 
+          backgroundColor: '#1a1a1a', 
+          color: 'white', 
+          padding: '1rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}
+      >
+        <div style={{ fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {file.fileName}
+        </div>
+        <button
+          onClick={onClose}
+          style={{
+            padding: '0.5rem 1rem',
+            backgroundColor: '#374151',
+            border: 'none',
+            borderRadius: '0.375rem',
+            color: 'white',
+            cursor: 'pointer'
+          }}
+          onMouseOver={(e) => e.target.style.backgroundColor = '#4b5563'}
+          onMouseOut={(e) => e.target.style.backgroundColor = '#374151'}
+        >
+          Close
+        </button>
+      </div>
+
+      {/* Content */}
+      <div 
+        style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem',
+          overflow: 'auto'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {renderContent()}
+      </div>
+
+      {/* Watermark */}
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        pointerEvents: 'none'
+      }}>
+        <div style={{
+          color: 'white',
+          fontSize: '4rem',
+          opacity: 0.05,
+          transform: 'rotate(-45deg)',
+          userSelect: 'none'
+        }}>
+          VIEW ONLY
+        </div>
+      </div>
     </div>
   );
 };
