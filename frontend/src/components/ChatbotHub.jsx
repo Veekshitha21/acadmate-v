@@ -3,7 +3,6 @@ import "./ChatbotHub.css";
 import Lottie from "lottie-react";
 import { MessageCircle, X } from "lucide-react";
 
-<<<<<<< HEAD
 const ChatbotHub = ({ userData }) => {
   // Get user's name from userData
   const getUserName = () => {
@@ -14,11 +13,7 @@ const ChatbotHub = ({ userData }) => {
   const userName = getUserName();
   const welcomeMessage = userName 
     ? `Welcome ${userName}`
-    : "Welcome to ExamPrep! Get exam-ready answers ✍️";
-
-=======
-const ChatbotHub = ({ isLoggedIn, userData }) => {
->>>>>>> 268e5ba741f17ba4cb240f183e71348ff699f03f
+    : "Welcome to ExamPrep! Get exam-ready answers ✍️"; 
   const [activeMode, setActiveMode] = useState("examprep");
   const [showWelcome, setShowWelcome] = useState(userName ? true : false);
   const [isWelcomeFading, setIsWelcomeFading] = useState(false);
@@ -291,7 +286,6 @@ const ChatbotHub = ({ isLoggedIn, userData }) => {
   return (
     <div className="chatbot-hub">
       <header className="chatbot-header">
-<<<<<<< HEAD
         {activeMode === "examprep" && (
           <div className="examprep-header-left">
             {examPrepAnimData && (
@@ -312,20 +306,6 @@ const ChatbotHub = ({ isLoggedIn, userData }) => {
             Ask your question
           </p>
         )}
-=======
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', position: 'relative', width: '100%' }}>
-          {activeMode === "examprep" && examPrepAnimData && (
-            <div style={{ width: '100px', height: '100px' }}>
-              <Lottie animationData={examPrepAnimData} loop autoplay style={{ width: '100%', height: '100%' }} />
-            </div>
-          )}
-          <h1>{modeConfig.name}</h1>
-         
-        </div>
-        <p className="chatbot-subtitle">
-          {activeMode === "examprep" ? "Structured answers and strategies for exam success" : "Ask your question"}
-        </p>
->>>>>>> 268e5ba741f17ba4cb240f183e71348ff699f03f
       </header>
 
       {/* Chat Window */}
