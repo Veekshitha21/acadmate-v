@@ -17,30 +17,28 @@ router.get("/:userId", async (req, res) => {
   }
 });
 
-// ✅ Mark attendance
+// ✅ Mark attendance with Predictable ID
 router.post("/mark", async (req, res) => {
   try {
-    const { userId, subject, date, attendance, status } = req.body;
-    if (!userId || !subject || !date)
-      return res.status(400).json({ error: "Missing fields" });
+    const { userId, subject, date, status } = req.body; 
+    if (!userId || !subject || !date) return res.status(400).json({ error: "Missing fields" });
 
-    const docId = `${userId}_${subject}_${date}_${status}`;
+    // ⭐ Create a unique, predictable ID matching your DELETE route logic
+    const docId = `${userId}_${subject}_${date}_${status}`; 
+
     await db.collection("attendance").doc(docId).set({
       userId,
       subject,
       date,
-      attendance,
       status,
       timestamp: new Date().toISOString(),
     });
 
     res.json({ message: "Attendance marked successfully" });
   } catch (err) {
-    console.error("Error marking attendance:", err);
     res.status(500).json({ error: err.message });
   }
 });
-
 // ✅ Delete a single session
 router.delete("/:userId/:subject/:date/:status", async (req, res) => {
   try {
@@ -54,7 +52,7 @@ router.delete("/:userId/:subject/:date/:status", async (req, res) => {
   }
 });
 
-// ✅ Delete all sessions for a subject
+// ✅ Delete all sessions for a subject (Fixed Undefined Variables)
 router.delete("/:userId/:subject", async (req, res) => {
   try {
     const { userId, subject } = req.params;
@@ -62,6 +60,7 @@ router.delete("/:userId/:subject", async (req, res) => {
       .collection("attendance")
       .where("userId", "==", userId)
       .where("subject", "==", subject)
+      // REMOVED: .where("date") and .where("status") as they are undefined here
       .get();
 
     if (snapshot.empty) {
@@ -74,9 +73,29 @@ router.delete("/:userId/:subject", async (req, res) => {
 
     res.json({ message: `All sessions for ${subject} deleted successfully` });
   } catch (err) {
-    console.error("Error deleting subject sessions:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
+// ✅ NEW: Get the list of subjects stored in the user's document
+router.get("/subjects/list/:userId", async (req, res) => {
+  try {
+    const userDoc = await db.collection("users").doc(req.params.userId).get();
+    if (!userDoc.exists) return res.status(404).json({ error: "User not found" });
+    res.json(userDoc.data().subjects || []); // Return subjects array or empty
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ✅ NEW: Save the list of subjects to the user's document
+router.post("/subjects/sync", async (req, res) => {
+  try {
+    const { userId, subjects } = req.body;
+    await db.collection("users").doc(userId).update({ subjects });
+    res.json({ message: "Subjects synced to DB" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 module.exports = router;

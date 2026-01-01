@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { discussionAPI } from '../../services/discussionAPI';
 import CommentSection from './CommentSection';
+import FileViewer from './FileViewer';
 import './DiscussionDetail.css';
 
 const DiscussionDetail = ({ isLoggedIn, userData }) => {
@@ -12,6 +13,8 @@ const DiscussionDetail = ({ isLoggedIn, userData }) => {
   const [voting, setVoting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [hasVoted, setHasVoted] = useState(false);
+  const [fileViewerOpen, setFileViewerOpen] = useState(false);
+  const [fileViewerIndex, setFileViewerIndex] = useState(0);
   
   const { id } = useParams();
   const navigate = useNavigate();
@@ -119,7 +122,14 @@ const DiscussionDetail = ({ isLoggedIn, userData }) => {
   const getFileIcon = (url) => {
     if (url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) return '🖼️';
     if (url.match(/\.pdf$/i)) return '📄';
+    if (url.match(/\.(txt|md)$/i)) return '📝';
+    if (url.match(/\.(js|jsx|ts|tsx|html|css|json)$/i)) return '💻';
     return '📎';
+  };
+
+  const openFileViewer = (index) => {
+    setFileViewerIndex(index);
+    setFileViewerOpen(true);
   };
 
   const renderFilePreview = (url, index) => {
@@ -128,26 +138,29 @@ const DiscussionDetail = ({ isLoggedIn, userData }) => {
 
     if (isImage) {
       return (
-        <div key={index} className="file-preview image-preview">
+        <div 
+          key={index} 
+          className="file-preview image-preview cursor-pointer"
+          onClick={() => openFileViewer(index)}
+        >
           <img src={url} alt={`Attachment ${index + 1}`} />
-          <a href={url} target="_blank" rel="noopener noreferrer" className="view-full">
-            View Full Size
-          </a>
+          <div className="view-overlay">
+            <span className="view-text">Click to view full size</span>
+          </div>
         </div>
       );
     }
 
     return (
-      <a
+      <button
         key={index}
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="file-attachment"
+        onClick={() => openFileViewer(index)}
+        className="file-attachment hover:bg-gray-50 transition-colors"
       >
         <span className="file-icon">{getFileIcon(url)}</span>
         <span className="file-name">{decodeURIComponent(filename)}</span>
-      </a>
+        <span className="file-action">Click to open</span>
+      </button>
     );
   };
 
@@ -260,6 +273,15 @@ const DiscussionDetail = ({ isLoggedIn, userData }) => {
         userData={userData}
         onCommentAdded={handleCommentAdded}
       />
+
+      {/* File Viewer Modal */}
+      {fileViewerOpen && discussion?.fileUrls && discussion.fileUrls.length > 0 && (
+        <FileViewer
+          files={discussion.fileUrls}
+          initialIndex={fileViewerIndex}
+          onClose={() => setFileViewerOpen(false)}
+        />
+      )}
     </div>
   );
 };

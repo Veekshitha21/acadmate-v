@@ -59,6 +59,7 @@ api.interceptors.response.use(
   }
 );
 
+
 /* ================================
    AUTH API
 ================================ */
@@ -87,6 +88,46 @@ export const authAPI = {
   getProfile: () =>
     api.get("/auth/profile"),
 };
+/* ================================
+   REMINDER API
+================================ */
+export const reminderAPI = {
+  getUserReminders: (userId) => {
+    if (!userId) throw new Error("userId is required");
+    return api.get(`/reminder/user/${encodeURIComponent(userId)}`);
+  },
+
+  addReminder: ({ userId, email, title, date, type }) => {
+    if (!userId || !email || !title || !date || !type) {
+      throw new Error("Missing reminder fields");
+    }
+
+    return api.post("/reminder/add", {
+      userId,
+      email,
+      title,
+      date,
+      type,
+    });
+  },
+
+  deleteReminder: (eventId) => {
+    if (!eventId) throw new Error("eventId is required");
+    return api.delete(`/reminder/${encodeURIComponent(eventId)}`);
+  },
+
+  sendReminderEmail: (email, eventTitle, eventDate) => {
+    if (!email || !eventTitle || !eventDate) {
+      throw new Error("Missing reminder email fields");
+    }
+
+    return api.post("/reminder/send", {
+      email,
+      eventTitle,
+      eventDate,
+    });
+  },
+};
 
 /* ================================
    PROFILE API
@@ -96,21 +137,62 @@ export const profileAPI = {
   update: (data) => api.put("/profile", data),
 };
 
-/* ================================
-   REMINDER API
-================================ */
-export const reminderAPI = {
-  sendReminderEmail: (email, eventTitle, eventDate) =>
-    api.post("/reminder/send", { email, eventTitle, eventDate }),
-};
+
 
 /* ================================
    ATTENDANCE API
 ================================ */
 export const attendanceAPI = {
-  mark: (data) => api.post("/attendance", data),
-  getAll: () => api.get("/attendance"),
+  getAttendance: (userId) => {
+    if (!userId) throw new Error("userId is required");
+    return api.get(`/attendance/${encodeURIComponent(userId)}`);
+  },
+
+  getSubjects: (userId) => {
+    if (!userId) throw new Error("userId is required");
+    return api.get(
+      `/attendance/subjects/list/${encodeURIComponent(userId)}`
+    );
+  },
+
+  syncSubjects: (userId, subjects = []) => {
+    if (!userId) throw new Error("userId is required");
+    if (!Array.isArray(subjects)) {
+      throw new Error("subjects must be an array");
+    }
+
+    return api.post("/attendance/subjects/sync", {
+      userId,
+      subjects,
+    });
+  },
+
+  markAttendance: ({ userId, subject, date, status }) => {
+    if (!userId || !subject || !date || !status) {
+      throw new Error("Missing attendance fields");
+    }
+
+    return api.post("/attendance/mark", {
+      userId,
+      subject,
+      date,
+      status,
+    });
+  },
+
+  deleteAttendanceSession: (userId, subject, date, status) => {
+    if (!userId || !subject || !date || !status) {
+      throw new Error("Missing delete attendance fields");
+    }
+
+    return api.delete(
+      `/attendance/${encodeURIComponent(userId)}/${encodeURIComponent(
+        subject
+      )}/${encodeURIComponent(date)}/${encodeURIComponent(status)}`
+    );
+  },
 };
+
 
 /* ================================
    DISCUSSION API

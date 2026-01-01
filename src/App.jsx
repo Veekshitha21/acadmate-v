@@ -55,33 +55,32 @@ function App() {
 
   /* ================= Handlers ================= */
   const handleLogin = (user) => {
-  // Normalize user data to include uid field for discussion system
     const normalizedUser = {
       ...user,
-      uid: user.id || user._id || user.uid, // Ensure uid exists
+      uid: user.id || user._id || user.uid,
       displayName: user.username || user.displayName || user.name,
     };
-    
+
     setUserData(normalizedUser);
     setIsLoggedIn(true);
 
-    // Update localStorage with normalized data
-    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-    localStorage.setItem("user", JSON.stringify({
-      ...storedUser,
-      ...normalizedUser
-    }));
+    // ✅ PERSIST LOGIN STATE
+    localStorage.setItem("isLoggedIn", "true");
+    localStorage.setItem("user", JSON.stringify(normalizedUser));
 
     setIsLoginModalOpen(false);
     setShowProfile(false);
   };
 
+
   const handleLogout = () => {
-    localStorage.clear();
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("isLoggedIn");
+
     setIsLoggedIn(false);
     setUserData(null);
     setShowProfile(false);
-    // preserve current route after logout so discussion pages remain visible
   };
 
   const handleShowProfile = () => {
