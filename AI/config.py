@@ -32,6 +32,18 @@ class Config:
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8000
     API_WORKERS: int = 4
+
+    # CORS settings (comma-separated origins in .env, e.g. "http://localhost:5173,http://localhost:5174")
+    CORS_ORIGINS: list[str] = [
+        o.strip()
+        for o in os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:5174").split(",")
+        if o.strip()
+    ]
+    # Allow any localhost port in dev (covers Vite's dynamic port changes)
+    CORS_ORIGIN_REGEX: str = os.getenv(
+        "CORS_ORIGIN_REGEX",
+        r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+    )
     
     # Groq LLM settings
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")

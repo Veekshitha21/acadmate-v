@@ -2,8 +2,8 @@ import logging
 from typing import Optional, Dict, Any, List
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field
 
 from config import config
@@ -65,18 +65,20 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://acadmate-lac.vercel.app",
-        "http://localhost:5174",
-        "http://localhost",
-        "http://localhost:3000",
-        "http://127.0.0.1",
-        "http://127.0.0.1:5173"
-    ],
+    # Explicit origins for dev + a regex to allow any localhost port.
+    # This avoids common CORS/preflight issues (especially when credentials are introduced later).
+    allow_origins=config.CORS_ORIGINS,
+    allow_origin_regex=config.CORS_ORIGIN_REGEX,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
+
+# Preflight safety-net (ngrok/proxies sometimes surface 405/404 on OPTIONS before middleware kicks in)
+@app.options("/{full_path:path}")
+async def preflight_handler(full_path: str, request: Request):
+    return Response(status_code=200)
 
 # Request/Response models
 class QueryRequest(BaseModel):

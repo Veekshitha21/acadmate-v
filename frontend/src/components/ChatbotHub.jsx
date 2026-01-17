@@ -3,6 +3,8 @@ import "./ChatbotHub.css";
 import Lottie from "lottie-react";
 
 const ChatbotHub = ({ userData }) => {
+  // AI API base URL (dev default). You can override via Vite env: VITE_AI_API_BASE_URL
+  const AI_API_BASE_URL = (import.meta?.env?.VITE_AI_API_BASE_URL || "http://localhost:8000").replace(/\/$/, "");
   // Get user's name from userData
   const getUserName = () => {
     if (!userData) return null;
@@ -95,9 +97,12 @@ const ChatbotHub = ({ userData }) => {
 
     console.log("Sending payload:", payload);
 
-    fetch("https://wan-unfugal-semirhythmically.ngrok-free.dev/generate", {
+    fetch(`${AI_API_BASE_URL}/generate`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "true"
+      },
       body: JSON.stringify(payload),
     })
       .then(async (res) => {
@@ -114,11 +119,19 @@ const ChatbotHub = ({ userData }) => {
         }));
       })
       .catch((error) => {
+        // Format error message for single line display
+        let errorMessage = error.message || "An error occurred";
+        // Check for specific error types
+        if (errorMessage.toLowerCase().includes("limit") || errorMessage.toLowerCase().includes("exceed")) {
+          errorMessage = "Limit exceeded. Please try again later.";
+        } else if (errorMessage.toLowerCase().includes("topic") || errorMessage.toLowerCase().includes("not available") || errorMessage.toLowerCase().includes("not found")) {
+          errorMessage = "Topics not available for this query. Please try a different question.";
+        }
         setMessages(prev => ({
           ...prev,
           [activeMode]: [
             ...prev[activeMode],
-            { type: "bot", text: `Error: ${error.message}` }
+            { type: "bot", text: `Error: ${errorMessage}`, isError: true }
           ]
         }));
       })
@@ -223,16 +236,63 @@ const ChatbotHub = ({ userData }) => {
 const renderMarkdown = (text) => {
   if (!text) return "";
 
-  // Escape HTML first
-  let processed = escapeHtml(text);
-
-  // ===== CODE BLOCKS - Must do BEFORE other processing =====
+  // ===== CODE BLOCKS - Must do BEFORE HTML escaping =====
   const codeBlocks = [];
-  processed = processed.replace(/```([\s\S]*?)```/g, (match, code) => {
+  // Extract code blocks FIRST (before HTML escaping)
+  let processed = text.replace(/```([\s\S]*?)```/g, (match, code) => {
     const placeholder = `___CODE_BLOCK_${codeBlocks.length}___`;
-    codeBlocks.push(`<pre><code>${code.trim()}</code></pre>`);
-    return placeholder;
+    // Preserve formatting - only trim leading/trailing newlines, keep indentation and line breaks
+    let formattedCode = code;
+    // Remove ONLY leading and trailing newlines (not all whitespace)
+    formattedCode = formattedCode.replace(/^\n+|\n+$/g, '');
+    // Escape HTML for code content (security)
+    const escapedCode = formattedCode
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    // Store code block with proper formatting
+    codeBlocks.push(`<pre class="code-block"><code class="code-content">${escapedCode}</code></pre>`);
+    return `\n${placeholder}\n`;
   });
+
+  // Now escape HTML for the rest (but preserve code block placeholders)
+  const parts = processed.split(/(___CODE_BLOCK_\d+___)/g);
+  processed = parts.map(part => {
+    if (part.match(/___CODE_BLOCK_\d+___/)) {
+      return part; // Keep placeholders as-is (already processed)
+    }
+    return escapeHtml(part); // Escape everything else
+  }).join('');
+
+  // Bold "side headings" inside points, e.g. "Portability: ...", "Operating Systems: ..."
+  // Works for any label at the start of a bullet/numbered item.
+  const boldLeadingLabel = (s) => {
+    if (!s) return s;
+    const trimmed = s.trim();
+    if (!trimmed) return s;
+    
+    // Skip if it's a code block placeholder
+    if (trimmed.includes("___CODE_BLOCK_")) {
+      return s;
+    }
+    
+    // Match: <Label>: <rest>
+    // - label: at least 2 chars, starts with a letter/number, can contain spaces, hyphens, etc.
+    // - stops at the first colon followed by space
+    // Examples: "Operating Systems: text", "Key Point: text", "Portability: text", "C Programming: text", "Structured programming: text"
+    // Be more flexible with whitespace and matching
+    const m = trimmed.match(/^([A-Za-z0-9][A-Za-z0-9\s\-]{1,80}?):\s+(.+)$/);
+    if (m) {
+      const label = m[1].trim();
+      const rest = m[2].trim();
+      // Only apply if label is reasonable (not too long, and rest exists)
+      if (label.length >= 2 && label.length <= 80 && rest.length > 0) {
+        return `<strong class="li-key">${label}:</strong> ${rest}`;
+      }
+    }
+    return s;
+  };
+
 
   // ===== INLINE CODE =====
   processed = processed.replace(/`([^`]+)`/g, "<code>$1</code>");
@@ -260,12 +320,13 @@ const renderMarkdown = (text) => {
         html += "</ul>";
         inUnorderedList = false;
       }
-      html += "<br>";
       continue;
     }
 
     // Code block placeholder - restore it
     if (line.includes("___CODE_BLOCK_")) {
+      const idx = parseInt(line.match(/___CODE_BLOCK_(\d+)___/)[1]);
+      // Always close any open lists before code blocks (remove bullet points for code)
       if (inOrderedList) {
         html += "</ol>";
         inOrderedList = false;
@@ -274,13 +335,14 @@ const renderMarkdown = (text) => {
         html += "</ul>";
         inUnorderedList = false;
       }
-      const idx = parseInt(line.match(/___CODE_BLOCK_(\d+)___/)[1]);
-      html += codeBlocks[idx];
+      // Add code block as standalone (no bullet point)
+      html += `<div class="code-block-wrapper">${codeBlocks[idx]}</div>`;
       continue;
     }
 
-    // HEADINGS - Keywords at start of line
-    const headingMatch = line.match(/^(Definition|Explanation|Examples?|Key Points?|Notes?|Summary|Code Example|Introduction|Conclusion|Important|Features?|Types?|Properties|Advantages?|Disadvantages?|Benefits?|Uses?|Applications?|Usage):?\s*$/i);
+    // HEADINGS - Keywords at start of line (standalone headings only)
+    // Match headings that are on their own line (with optional colon, no content after)
+    const headingMatch = line.match(/^(Definition|Explanation|Examples?|Key Points?|Notes?|Summary|Code Example|Introduction|Conclusion|Important|Features?|Types?|Properties|Advantages?|Disadvantages?|Benefits?|Uses?|Applications?|Usage|Syntax|Purpose|Working|Structure|Function|Variable|Variables|Loop|Loops|Condition|Statement|Statements|Operator|Operators):?\s*$/i);
     if (headingMatch) {
       if (inOrderedList) {
         html += "</ol>";
@@ -305,7 +367,31 @@ const renderMarkdown = (text) => {
         html += "<ol>";
         inOrderedList = true;
       }
-      html += `<li>${numberedMatch[2]}</li>`;
+      let itemContent = numberedMatch[2];
+      // Check if item contains code block placeholder
+      if (itemContent.includes("___CODE_BLOCK_")) {
+        // Extract label before code block and make it bold
+        const parts = itemContent.split(/___CODE_BLOCK_\d+___/);
+        const labelPart = parts[0] ? boldLeadingLabel(parts[0].trim()) : '';
+        // Close the list before adding code block (remove bullet point for code)
+        html += "</ol>";
+        inOrderedList = false;
+        // Add label if exists, then add code block
+        if (labelPart) {
+          html += `<div class="code-label">${labelPart}</div>`;
+        }
+        // Extract and add code blocks (without bullet points)
+        const codeMatches = itemContent.match(/___CODE_BLOCK_(\d+)___/g);
+        if (codeMatches) {
+          codeMatches.forEach(match => {
+            const idx = parseInt(match.match(/___CODE_BLOCK_(\d+)___/)[1]);
+            html += `<div class="code-block-wrapper">${codeBlocks[idx]}</div>`;
+          });
+        }
+      } else {
+        // Make sure side headings are bolded (like "Portability:", "Efficiency:")
+        html += `<li>${boldLeadingLabel(itemContent)}</li>`;
+      }
       continue;
     }
 
@@ -320,11 +406,51 @@ const renderMarkdown = (text) => {
         html += "<ul>";
         inUnorderedList = true;
       }
-      html += `<li>${bulletMatch[1]}</li>`;
+      let itemContent = bulletMatch[1];
+      // Check if item contains code block placeholder
+      if (itemContent.includes("___CODE_BLOCK_")) {
+        // Extract label before code block and make it bold
+        const parts = itemContent.split(/___CODE_BLOCK_\d+___/);
+        const labelPart = parts[0] ? boldLeadingLabel(parts[0].trim()) : '';
+        // Close the list before adding code block (remove bullet point for code)
+        html += "</ul>";
+        inUnorderedList = false;
+        // Add label if exists, then add code block
+        if (labelPart) {
+          html += `<div class="code-label">${labelPart}</div>`;
+        }
+        // Extract and add code blocks (without bullet points)
+        const codeMatches = itemContent.match(/___CODE_BLOCK_(\d+)___/g);
+        if (codeMatches) {
+          codeMatches.forEach(match => {
+            const idx = parseInt(match.match(/___CODE_BLOCK_(\d+)___/)[1]);
+            html += `<div class="code-block-wrapper">${codeBlocks[idx]}</div>`;
+          });
+        }
+      } else {
+        // Make sure side headings are bolded (like "Portability:", "Efficiency:")
+        html += `<li>${boldLeadingLabel(itemContent)}</li>`;
+      }
       continue;
     }
 
-    // REGULAR PARAGRAPH
+    // REGULAR PARAGRAPH - Convert to bullet points (but NOT for code blocks)
+    // Check if line contains code block placeholder - if so, handle separately
+    if (line.includes("___CODE_BLOCK_")) {
+      // This should have been caught earlier, but handle it just in case
+      const idx = parseInt(line.match(/___CODE_BLOCK_(\d+)___/)[1]);
+      if (inOrderedList) {
+        html += "</ol>";
+        inOrderedList = false;
+      }
+      if (inUnorderedList) {
+        html += "</ul>";
+        inUnorderedList = false;
+      }
+      html += `<div class="code-block-wrapper">${codeBlocks[idx]}</div>`;
+      continue;
+    }
+    
     if (inOrderedList) {
       html += "</ol>";
       inOrderedList = false;
@@ -333,7 +459,58 @@ const renderMarkdown = (text) => {
       html += "</ul>";
       inUnorderedList = false;
     }
-    html += `<p>${line}</p>`;
+    // Check if line looks like code (contains HTML tags or code patterns)
+    // If it looks like code but wasn't in ``` blocks, wrap it in code block
+    if (line.trim().match(/^(&lt;|<!|<)(html|head|body|DOCTYPE|h1|h2|h3|p|div|span|script|style|title)/i) || 
+        (line.trim().includes('&lt;') && line.trim().includes('&gt;') && line.match(/&lt;[^&]+&gt;/))) {
+      // This looks like HTML code, wrap it in code block
+      const codeContent = line
+        .replace(/&lt;/g, "&lt;")
+        .replace(/&gt;/g, "&gt;")
+        .replace(/&amp;/g, "&amp;");
+      // Close any lists before code
+      if (inOrderedList) {
+        html += "</ol>";
+        inOrderedList = false;
+      }
+      if (inUnorderedList) {
+        html += "</ul>";
+        inUnorderedList = false;
+      }
+      // Wrap in code block
+      html += `<div class="code-block-wrapper"><pre class="code-block"><code class="code-content">${codeContent}</code></pre></div>`;
+      continue;
+    }
+    
+    // Convert paragraph text into bullet points
+    // Don't split on commas if it looks like a label (e.g., "Portability: C programs...")
+    // Check if line starts with a label pattern first
+    const labelMatch = line.trim().match(/^([A-Za-z0-9][A-Za-z0-9\s\-]{1,80}?):\s+(.+)$/);
+    if (labelMatch) {
+      // It's a label, convert to bullet point with bold label
+      html += "<ul><li>" + boldLeadingLabel(line) + "</li></ul>";
+      continue;
+    }
+    
+    // Split by sentence endings or semicolons (but NOT commas to preserve labels)
+    if (line.length > 40 && (line.match(/[.!?]\s+/) || line.includes(';'))) {
+      // Split into multiple bullet points (don't split on commas)
+      const parts = line.split(/(?<=[.!?])\s+|;\s+/).filter(s => s.trim().length > 0);
+      if (parts.length > 1) {
+        html += "<ul>";
+        parts.forEach(part => {
+          const trimmed = part.trim();
+          if (trimmed.length > 0) {
+            html += `<li>${boldLeadingLabel(trimmed)}</li>`;
+          }
+        });
+        html += "</ul>";
+        continue;
+      }
+    }
+    // Single sentence/paragraph - convert to bullet point
+    // Make sure to bold labels like "Portability:", "Efficiency:", etc.
+    html += "<ul><li>" + boldLeadingLabel(line) + "</li></ul>";
   }
 
   // Close any remaining open lists
@@ -357,7 +534,10 @@ const renderMarkdown = (text) => {
                 <Lottie animationData={examPrepAnimData} loop autoplay style={{ width: '100%', height: '100%' }} />
               </div>
             )}
-            <h1 className="examprep-title-small">{modeConfig.name}</h1>
+            <div className="examprep-header-content">
+              <h1 className="examprep-title-small">{modeConfig.name}</h1>
+              <p className="examprep-subtitle-small">Exam Prep is here to help with first-year engineering subjects!</p>
+            </div>
           </div>
         )}
         {activeMode !== "examprep" && (
@@ -381,12 +561,16 @@ const renderMarkdown = (text) => {
           )}
           
           {currentMessages.map((msg, index) => (
-            <div key={index} className={`message ${msg.type}`}>
+            <div key={index} className={`message ${msg.type} ${msg.isError ? 'error-message' : ''}`}>
               {msg.type === "bot" ? (
-                <div
-                  className="bot-content"
-                  dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.text) }}
-                />
+                msg.isError || msg.text.startsWith("Error:") ? (
+                  <div className="error-text">{msg.text}</div>
+                ) : (
+                  <div
+                    className="bot-content"
+                    dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.text) }}
+                  />
+                )
               ) : (
                 msg.text
               )}
