@@ -1,43 +1,168 @@
-/* ========== EXAM ANSWER HEADING FIX ========== */
+/* ========================= */
+/* Dashboard Page            */
+/* ========================= */
 
-.bot-content h2 {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #000;
-  margin: 1.8rem 0 0.6rem;
-  border-bottom: 2px solid #000;
-  padding-bottom: 0.25rem;
+.dashboard-page {
+  min-height: 100vh;
+  background-color: var(--beige);
 }
 
-.bot-content h3 {
-  font-size: 1.25rem;
+.dashboard-main {
+  padding: 3rem 1rem;
+}
+
+/* ========================= */
+/* Header                    */
+/* ========================= */
+
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.dashboard-header h2 {
+  font-size: 2.4rem;
+  color: var(--brown);
   font-weight: 700;
-  color: #000;
-  margin: 1.5rem 0 0.6rem;
 }
 
-.bot-content h4 {
-  font-size: 1.05rem;
+.dashboard-header p {
+  font-size: 1.15rem;
+  color: var(--brown);
+  opacity: 0.7;
+  margin-top: 0.5rem;
+}
+
+/* ========================= */
+/* Cycles                    */
+/* ========================= */
+
+.cycles-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.cycle-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 2.5rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.cycle-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.cycle-icon {
+  font-size: 4rem;
+  margin-bottom: 0.5rem;
+}
+
+.cycle-header h3 {
+  font-size: 2rem;
+  color: var(--accent);
+}
+
+/* ========================= */
+/* Subjects (DESKTOP)        */
+/* ========================= */
+
+.subjects-list {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.subjects-label {
   font-weight: 600;
-  color: #000;
-  margin: 1rem 0 0.3rem;
+  color: var(--brown);
+  white-space: nowrap;
 }
 
-/* Normal text */
-.bot-content {
-  font-size: 1rem;
-  line-height: 1.75;
-  color: #2b2b2b;
+.subjects-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
-/* Remove italics from converted headings */
-.bot-content h4 em {
-  font-style: normal;
+.subject-tag {
+  background-color: var(--beige);
+  color: var(--brown);
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  border: 1px solid var(--beige-footer);
 }
 
-/* Mobile */
+
+/* ========================= */
+/* Materials                 */
+/* ========================= */
+
+.materials-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.material-card {
+  background: linear-gradient(135deg, var(--beige), var(--beige-footer));
+  border-radius: 12px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.material-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+}
+
+.material-icon {
+  font-size: 2.5rem;
+}
+
+.material-card h5 {
+  margin-top: 0.5rem;
+  color: var(--brown);
+}
+
+/* ========================= */
+/* MOBILE FIX (IMPORTANT)    */
+/* ========================= */
+
 @media (max-width: 768px) {
-  .bot-content h2 { font-size: 1.3rem; }
-  .bot-content h3 { font-size: 1.15rem; }
-  .bot-content h4 { font-size: 1rem; }
+
+  /* Center everything */
+  .cycle-card {
+    padding: 2rem 1.5rem;
+  }
+
+  /* 🔥 THIS IS THE FIX YOU WANT 🔥 */
+  .subjects-list {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .subjects-label {
+    margin-bottom: 0.8rem;
+  }
+
+  .subjects-tags {
+    justify-content: center;
+  }
+
+  .subject-tag {
+    width: fit-content;
+  }
+
+  .materials-grid {
+    grid-template-columns: 1fr;
+  }
 }
