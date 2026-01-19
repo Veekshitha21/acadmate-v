@@ -5,9 +5,18 @@ import { auth } from "../firebase";
 /* ================================
    Base URL
 ================================ */
+// const API_BASE_URL = 
+//   import.meta.env.VITE_API_URL || 
+//   (import.meta.env.MODE === "production"
+//     ? "https://acadmate-7z8f.onrender.com/api" 
+//     : "http://localhost:5001/api");
+
+/* ================================
+   Base URL - Updated Logic
+================================ */
 const API_BASE_URL = 
   import.meta.env.VITE_API_URL || 
-  (import.meta.env.MODE === "production"
+  (import.meta.env.PROD // Using Vite's built-in boolean
     ? "https://acadmate-7z8f.onrender.com/api" 
     : "http://localhost:5001/api");
 /* ================================

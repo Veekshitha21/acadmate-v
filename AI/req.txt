@@ -1,24 +1,22 @@
-# Core dependencies
-sentence-transformers>=2.3.1
-huggingface-hub>=0.20.3
-pinecone-client==3.0.0
-fastapi==0.109.0
-uvicorn[standard]==0.27.0
-pydantic==2.5.3
 
-# LLM - Groq
-groq==0.4.2
+sentence-transformers
+huggingface-hub
+pinecone
+fastapi
+uvicorn[standard]
+pydantic
 
-# Embedding models
-torch>=2.0.0
-transformers>=4.36.0
 
-# Async support
-httpx==0.26.0
-aiofiles==23.2.1
+groq
 
-# Optional: Production deployment
-gunicorn==21.2.0
 
-# Optional: Monitoring and logging
-python-multipart==0.0.6
+torch
+transformers
+
+httpx
+aiofiles
+
+
+gunicorn
+
+python-multipart

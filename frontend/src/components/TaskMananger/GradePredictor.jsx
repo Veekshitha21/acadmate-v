@@ -19,10 +19,10 @@ const GradePredictor = ({ onBack }) => {
       --beige-footer: #ddd9c5;
     }
 
-    .grade-predictor-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 1rem;
+.grade-predictor-container {
+      max-width: 1400px;
+      margin: 1rem auto 0 auto;
+      padding: 0.5rem 1.5rem;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
@@ -72,31 +72,35 @@ const GradePredictor = ({ onBack }) => {
     }
 
     .grade-content {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      grid-template-areas:
+        "cie results";
       gap: 1.5rem;
+      align-items: start;
     }
 
     /* CIE Input Section */
     .cie-section {
+      grid-area: cie;
       background: var(--white);
-      padding: 1.2rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      padding: 0.85rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     }
 
     .cie-section h3 {
-      margin: 0 0 1rem 0;
+      margin: 0 0 0.65rem 0;
       color: var(--brown);
-      font-size: 1.1rem;
+      font-size: 0.95rem;
       font-weight: 600;
     }
 
     .cie-inputs {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 0.65rem;
+      margin-bottom: 0.85rem;
     }
 
     .input-group {
@@ -105,17 +109,17 @@ const GradePredictor = ({ onBack }) => {
     }
 
     .input-label {
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.35rem;
       color: var(--brown);
-      font-size: 0.9rem;
+      font-size: 0.8rem;
       font-weight: 600;
     }
 
     .grade-input {
-      padding: 0.8rem;
+      padding: 0.55rem;
       border: 2px solid var(--beige-footer);
       border-radius: 6px;
-      font-size: 1rem;
+      font-size: 0.85rem;
       background: var(--white);
       color: var(--brown);
       transition: all 0.2s ease;
@@ -149,15 +153,15 @@ const GradePredictor = ({ onBack }) => {
 
     .cie-summary {
       background: var(--beige);
-      padding: 1rem;
+      padding: 0.7rem;
       border-radius: 8px;
-      border-left: 4px solid var(--accent);
+      border-left: 3px solid var(--accent);
     }
 
     .summary-item {
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.35rem;
       color: var(--brown);
-      font-size: 0.9rem;
+      font-size: 0.8rem;
       font-weight: 500;
     }
 
@@ -168,35 +172,38 @@ const GradePredictor = ({ onBack }) => {
     .best-possible {
       font-weight: 600;
       color: var(--accent);
-      font-size: 1rem;
+      font-size: 0.85rem;
     }
 
     /* Results Section */
     .results-section {
+      grid-area: results;
       background: var(--white);
-      padding: 1.2rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      padding: 0.85rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      max-height: calc(100vh - 150px);
+      overflow-y: auto;
     }
 
     .results-section h3 {
-      margin: 0 0 1rem 0;
+      margin: 0 0 0.65rem 0;
       color: var(--black);
-      font-size: 1.1rem;
+      font-size: 0.95rem;
       font-weight: 600;
     }
 
     .grade-results {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.65rem;
     }
 
     .grade-card {
       background: var(--beige);
-      padding: 1rem;
+      padding: 0.7rem;
       border-radius: 8px;
-      border-left: 4px solid var(--accent);
+      border-left: 3px solid var(--accent);
       transition: all 0.2s ease;
     }
 
@@ -208,87 +215,87 @@ const GradePredictor = ({ onBack }) => {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 0.8rem;
-      padding-bottom: 0.5rem;
+      margin-bottom: 0.55rem;
+      padding-bottom: 0.35rem;
       border-bottom: 1px solid var(--beige-footer);
     }
 
     .grade-letter {
-      font-size: 1.5rem;
+      font-size: 1.2rem;
       font-weight: 700;
     }
 
     .grade-range {
       color: var(--brown);
-      font-size: 0.8rem;
+      font-size: 0.7rem;
       font-weight: 500;
     }
 
     .not-achievable-note {
       background: #fbf9f1;
       color: #f41e1e;
-      padding: 0.5rem;
+      padding: 0.35rem;
       border-radius: 4px;
-      margin-bottom: 0.8rem;
-      font-size: 0.8rem;
+      margin-bottom: 0.55rem;
+      font-size: 0.7rem;
       text-align: center;
     }
 
     .grade-details {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.35rem;
     }
 
     .see-requirement strong {
       color: var(--brown);
-      font-size: 0.9rem;
+      font-size: 0.8rem;
     }
 
     .see-score {
       color: var(--accent);
       font-weight: 600;
-      font-size: 0.9rem;
+      font-size: 0.8rem;
     }
 
     .see-score-100 {
       color: var(--brown);
-      font-size: 0.8rem;
+      font-size: 0.7rem;
     }
 
     .see-percentage {
       color: var(--brown);
-      font-size: 0.8rem;
+      font-size: 0.7rem;
       opacity: 0.8;
     }
 
     .easy-target {
       background: #dcfce7;
       color: #059669;
-      padding: 0.5rem;
+      padding: 0.35rem;
       border-radius: 4px;
       text-align: center;
-      font-size: 0.8rem;
+      font-size: 0.7rem;
       font-weight: 600;
     }
 
     .moderate-target {
       background: #fef3c7;
       color: #d97706;
-      padding: 0.5rem;
+      padding: 0.35rem;
       border-radius: 4px;
       text-align: center;
-      font-size: 0.8rem;
+      font-size: 0.7rem;
       font-weight: 600;
     }
 
     .hard-target {
       background: #fee2e2;
       color: #dc2626;
-      padding: 0.5rem;
+      padding: 0.35rem;
       border-radius: 4px;
       text-align: center;
-      font-size: 0.8rem;
+      font-size: 0.7rem;
       font-weight: 600;
     }
 
@@ -375,47 +382,73 @@ const GradePredictor = ({ onBack }) => {
       margin: 0.25rem 0;
     }
 
-    /* Tips Section */
-    .tips-section {
+    .grade-point-info-standalone {
       background: var(--white);
-      padding: 1.2rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .tips-section h3 {
-      margin: 0 0 1rem 0;
-      color: var(--brown);
-      font-size: 1.1rem;
-      font-weight: 600;
-    }
-
-    .tips-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1rem;
-    }
-
-    .tip-card {
-      background: var(--beige);
-      padding: 1rem;
+      padding: 0.6rem;
       border-radius: 8px;
-      border-left: 4px solid var(--accent);
-      transition: all 0.2s ease;
+      margin-top: 0.85rem;
+      border: 1px solid var(--beige-footer);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
     }
 
-    .tip-card h4 {
+    .grade-point-info-standalone h4 {
       margin: 0 0 0.5rem 0;
       color: var(--brown);
-      font-size: 1rem;
+      font-size: 0.8rem;
       font-weight: 600;
     }
 
-    .tip-card p {
-      margin: 0;
-      color: var(--brown);
-      font-size: 0.9rem;
-      line-height: 1.4;
+    @media (max-width: 1024px) {
+      .grade-content {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "cie"
+          "results"
+          "grade-info";
+      }
+      
+      .results-section {
+        max-height: none;
+      }
+      
+      .grade-point-info {
+        grid-area: grade-info;
+        margin-top: 0;
+      }
+      
+      .cie-section .grade-point-info {
+        display: none;
+      }
+      
+      .grade-point-info-standalone {
+        display: none;
+      }
+      
+      .grade-point-info-mobile {
+        display: block;
+        grid-area: grade-info;
+        background: var(--white);
+        padding: 0.6rem;
+        border-radius: 8px;
+        border: 1px solid var(--beige-footer);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+      }
+      
+      .grade-point-info-mobile h4 {
+        margin: 0 0 0.5rem 0;
+        color: var(--brown);
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+      
+      .grade-point-info-mobile .grade-point-content {
+        background: transparent;
+        padding: 0;
+      }
+    }
+    
+    .grade-point-info-mobile {
+      display: none;
     }
 
     @media (max-width: 768px) {
@@ -721,19 +754,29 @@ const GradePredictor = ({ onBack }) => {
             </div>
           </div>
 
-          <div className="cie-summary">
+           <div className="cie-summary">
             <div className="summary-item">Total CIE Raw: {cie1 + cie2 + cie3}/80</div>
             <div className="summary-item">CIE Scaled: {calculations.totalCie.toFixed(1)}/40</div>
             <div className="summary-item best-possible">
               Best Possible Grade: <strong>{currentGrade}</strong>
             </div>
-            <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-              <button className="cgpa-btn" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} onClick={() => {
+            <div style={{ marginTop: '0.85rem', textAlign: 'center' }}>
+              <button className="cgpa-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }} onClick={() => {
                 setShowCGPAModal(true);
                 setCgpaSGPAs(Array(cgpaSemesters).fill(''));
               }}>
                  Calculate CGPA
               </button>
+            </div>
+          </div>
+
+          <div className="grade-point-info-standalone">
+            <h4>Grade Point System</h4>
+            <div style={{ marginBottom: '0.35rem', color: 'var(--brown)', fontSize: '0.75rem', lineHeight: '1.4' }}>
+              <strong>SGPA:</strong> Grade points for this subject (S=10, A=9, B=8, C=7, D=6, E=5, F=0)
+            </div>
+            <div style={{ color: 'var(--brown)', fontSize: '0.75rem', lineHeight: '1.4' }}>
+              <strong>CGPA:</strong> Average of all previous semester SGPAs + current subject SGPA
             </div>
           </div>
         </div>
@@ -779,30 +822,15 @@ const GradePredictor = ({ onBack }) => {
           </div>
         </div>
 
-        {/* Tips Section */}
-        <div className="tips-section">
-          <h3>Grade Point System</h3>
-          <div style={{ background: 'var(--beige)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', borderLeft: '4px solid var(--accent)' }}>
-            <div style={{ marginBottom: '0.5rem', color: 'var(--brown)', fontSize: '0.9rem' }}>
+        {/* Grade Point Info for Mobile - shown at bottom */}
+        <div className="grade-point-info-mobile">
+          <h4>Grade Point System</h4>
+          <div className="grade-point-content">
+            <div style={{ marginBottom: '0.35rem', color: 'var(--brown)', fontSize: '0.75rem', lineHeight: '1.4' }}>
               <strong>SGPA:</strong> Grade points for this subject (S=10, A=9, B=8, C=7, D=6, E=5, F=0)
             </div>
-            <div style={{ color: 'var(--brown)', fontSize: '0.9rem' }}>
+            <div style={{ color: 'var(--brown)', fontSize: '0.75rem', lineHeight: '1.4' }}>
               <strong>CGPA:</strong> Average of all previous semester SGPAs + current subject SGPA
-            </div>
-          </div>
-          <h3>Study Tips</h3>
-          <div className="tips-grid">
-            <div className="tip-card">
-              <h4>📚 For S Grade (90%+)</h4>
-              <p>Master all concepts, solve previous years, focus on application-based questions</p>
-            </div>
-            <div className="tip-card">
-              <h4>🎯 For A Grade (80%+)</h4>
-              <p>Strong fundamentals, regular practice, cover all important topics thoroughly</p>
-            </div>
-            <div className="tip-card">
-              <h4>📝 For B Grade (70%+)</h4>
-              <p>Focus on core concepts, practice standard problems, time management</p>
             </div>
           </div>
         </div>

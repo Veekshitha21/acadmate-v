@@ -535,7 +535,7 @@ function Task({user}) {
     img { max-width: 100%; display: block; }
 
     /* Smooth scroll */
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: auto; }
 
     .container { width: min(1100px, 92vw); margin-inline: auto; }
     .hero { padding: 64px 0 24px; }
@@ -773,8 +773,7 @@ function Task({user}) {
           <span className="title-sub">College Life</span>
         </h1>
         <p className="subtitle">
-          Your complete digital companion for academic success and event planning. 
-          Track attendance, predict grades, and never miss important events again.
+          
         </p>
         
         {/* Decorative Elements - Visual enhancement dots and lines */}

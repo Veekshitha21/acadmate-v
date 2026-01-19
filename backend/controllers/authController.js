@@ -120,7 +120,7 @@ const register = async (req, res) => {
     const usersRef = db.collection('users');
     const snapshot = await usersRef.where('email', '==', normalizedEmail).get();
 
-    if (!snapshot.empty) return res.status(400).json({ message: 'User already exists' });
+    if (!snapshot.empty) return res.status(400).json({ message: 'Email already exists' });
 
     // Normalize phone number (remove non-digits, take last 10 digits)
     const normalizedPhone = phone.replace(/\D/g, '').slice(-10);

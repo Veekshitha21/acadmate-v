@@ -24,10 +24,8 @@ export default function Navbar({
   ];
 
   const handleNavClick = (item) => {
-    // If we're on a discussion route, navigate to home first
     if (location.pathname.startsWith('/discussions')) {
       navigate('/');
-      // Use setTimeout to ensure navigation completes before section change
       setTimeout(() => {
         onSectionChange(item.name);
       }, 50);
@@ -35,6 +33,18 @@ export default function Navbar({
       onSectionChange(item.name);
     }
     setIsMobileMenuOpen(false);
+  };
+
+  // Logic for logout confirmation
+  const handleLogoutWithConfirmation = () => {
+    const confirmLogout = window.confirm("Are you sure you want to logout?");
+    if (confirmLogout) {
+      onLogout(); // Clears local storage/state
+      if (location.pathname.startsWith('/discussions')) {
+        navigate('/');
+      }
+      setIsMobileMenuOpen(false);
+    }
   };
 
   const isDiscussionActive = location.pathname.startsWith("/discussions");
@@ -46,9 +56,7 @@ export default function Navbar({
           {/* Logo */}
           <div className="flex items-center space-x-2">
             <BookOpen className="h-8 w-8 text-accent" />
-            <span className="text-2xl font-bold custom-brown">
-              AcadMate
-            </span>
+            <span className="text-2xl font-bold custom-brown">AcadMate</span>
           </div>
 
           {/* Desktop Navigation */}
@@ -67,7 +75,6 @@ export default function Navbar({
               </button>
             ))}
 
-            {/* 🔹 Discussion Button */}
             <Link
               to="/discussions"
               className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -84,7 +91,6 @@ export default function Navbar({
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => {
-                    // If on discussion route, navigate to home first
                     if (location.pathname.startsWith('/discussions')) {
                       navigate('/');
                       setTimeout(() => {
@@ -101,13 +107,7 @@ export default function Navbar({
                 </button>
 
                 <button
-                  onClick={() => {
-                    onLogout();
-                    // Navigate to home if on discussions
-                    if (location.pathname.startsWith('/discussions')) {
-                      navigate('/');
-                    }
-                  }}
+                  onClick={handleLogoutWithConfirmation}
                   className="px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
                 >
                   Logout
@@ -123,17 +123,12 @@ export default function Navbar({
             )}
           </div>
 
-          {/* Mobile menu button */}
           <div className="md:hidden">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="p-2 rounded-md custom-brown hover:bg-gray-100"
             >
-              {isMobileMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
+              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
@@ -156,7 +151,6 @@ export default function Navbar({
                 </button>
               ))}
 
-              {/* 🔹 Discussion (Mobile) */}
               <Link
                 to="/discussions"
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -190,13 +184,7 @@ export default function Navbar({
                   </button>
 
                   <button
-                    onClick={() => {
-                      onLogout();
-                      if (location.pathname.startsWith('/discussions')) {
-                        navigate('/');
-                      }
-                      setIsMobileMenuOpen(false);
-                    }}
+                    onClick={handleLogoutWithConfirmation}
                     className="w-full px-3 py-2 rounded-md text-red-600 font-medium hover:bg-red-50 transition-colors"
                   >
                     Logout

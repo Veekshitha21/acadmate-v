@@ -38,7 +38,7 @@ const [targetPercentage, setTargetPercentage] = useState("75");
     try {
       
       // Fetch all subjects (including empty ones)
-      const summaryRes = await fetch(`http://localhost:5001/api/attendance/${userId}/summary`, {
+      const summaryRes = await fetch(`https://acadmate-7z8f.onrender.com/api/attendance/${userId}/summary`, {
         credentials: "include",
       });
       
@@ -50,7 +50,7 @@ const [targetPercentage, setTargetPercentage] = useState("75");
       const summary = await summaryRes.json();
       
       // Fetch attendance records
-      const recordsRes = await fetch(`http://localhost:5001/api/attendance/${userId}`, {
+      const recordsRes = await fetch(`https://acadmate-7z8f.onrender.com/api/attendance/${userId}`, {
         credentials: "include",
       });
 
@@ -109,7 +109,7 @@ const [targetPercentage, setTargetPercentage] = useState("75");
     }
 
     try {
-      const res = await fetch(`http://localhost:5001/api/attendance/subject/add`, {
+      const res = await fetch(`https://acadmate-7z8f.onrender.com/api/attendance/subject/add`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -140,7 +140,7 @@ const [targetPercentage, setTargetPercentage] = useState("75");
     setIsDeleting(true);
 
     try {
-      const url = `http://localhost:5001/api/attendance/subject/${userId}/${encodeURIComponent(subject.name)}`;
+      const url = `https://acadmate-7z8f.onrender.com/attendance/subject/${userId}/${encodeURIComponent(subject.name)}`;
       
       const response = await fetch(url, {
         method: "DELETE",
@@ -186,7 +186,7 @@ const [targetPercentage, setTargetPercentage] = useState("75");
     setIsMarkingAttendance(true);
 
     try {
-      const res = await fetch(`http://localhost:5001/api/attendance/mark`, {
+      const res = await fetch(`https://acadmate-7z8f.onrender.com/api/attendance/mark`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -250,7 +250,7 @@ const [targetPercentage, setTargetPercentage] = useState("75");
 
     try {
       const res = await fetch(
-        `http://localhost:5001/api/attendance/record/${userId}/${encodeURIComponent(subject.name)}/${selectedDate}`,
+        `https://acadmate-7z8f.onrender.com/api/attendance/record/${userId}/${encodeURIComponent(subject.name)}/${selectedDate}`,
         {
           method: "DELETE",
           credentials: "include",
