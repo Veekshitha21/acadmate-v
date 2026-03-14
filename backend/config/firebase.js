@@ -74,33 +74,35 @@ require("dotenv").config();
 let credential;
 
 try {
-  // Priority 1: BASE64 (Best for Hostinger/Production)
-  if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
-    console.log("🔐 Loading Firebase credentials from BASE64 environment variable...");
-    const base64String = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64.trim();
+  // Priority 1: Split BASE64 (Hostinger)
+  if (process.env.FIREBASE_B64_1) {
+    console.log("🔐 Loading Firebase from split BASE64...");
+    const base64String = (
+      process.env.FIREBASE_B64_1 +
+      process.env.FIREBASE_B64_2 +
+      process.env.FIREBASE_B64_3 +
+      process.env.FIREBASE_B64_4
+    ).trim();
     const jsonString = Buffer.from(base64String, 'base64').toString('utf-8');
     credential = admin.credential.cert(JSON.parse(jsonString));
-    console.log("✅ Firebase initialized successfully from BASE64");
-  } 
-  // Priority 2: Raw JSON String
-  else if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    console.log("🔐 Loading Firebase credentials from JSON environment variable...");
-    let rawJson = process.env.FIREBASE_SERVICE_ACCOUNT.trim();
-    if (rawJson.startsWith('"') || rawJson.startsWith("'")) rawJson = rawJson.slice(1, -1);
-    const serviceAccount = JSON.parse(rawJson.replace(/\\n/g, '\n'));
-    credential = admin.credential.cert(serviceAccount);
-    console.log("✅ Firebase initialized successfully from JSON string");
+    console.log("✅ Firebase initialized from split BASE64");
   }
-  // Priority 3: Local file (Fallback for your MacBook Development)
+  // Priority 2: Single BASE64 (Render)
+  else if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+    console.log("🔐 Loading Firebase from BASE64...");
+    const jsonString = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64.trim(), 'base64').toString('utf-8');
+    credential = admin.credential.cert(JSON.parse(jsonString));
+    console.log("✅ Firebase initialized from BASE64");
+  }
+  // Priority 3: Local file (Development)
   else {
     const serviceAccountPath = path.join(__dirname, "serviceAccountKey.json");
     if (fs.existsSync(serviceAccountPath)) {
-      console.log("📁 Loading Firebase credentials from local serviceAccountKey.json...");
-      const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
-      credential = admin.credential.cert(serviceAccount);
-      console.log("✅ Firebase initialized successfully from local file");
+      console.log("📁 Loading Firebase from local file...");
+      credential = admin.credential.cert(JSON.parse(fs.readFileSync(serviceAccountPath, "utf8")));
+      console.log("✅ Firebase initialized from local file");
     } else {
-      throw new Error("Missing FIREBASE_SERVICE_ACCOUNT_BASE64 env var and local JSON file not found.");
+      throw new Error("No Firebase credentials found!");
     }
   }
 } catch (error) {
@@ -108,14 +110,10 @@ try {
   process.exit(1);
 }
 
-// Initialize Firebase Admin
 if (!admin.apps.length) {
-  const defaultBucket = "acadmate-78932.firebasestorage.app";
-  const bucketName = process.env.FIREBASE_BUCKET || defaultBucket;
-
   admin.initializeApp({
     credential: credential,
-    storageBucket: bucketName,
+    storageBucket: process.env.FIREBASE_BUCKET || "acadmate-78932.firebasestorage.app",
   });
   console.log("🚀 Firebase Admin SDK initialized");
 }

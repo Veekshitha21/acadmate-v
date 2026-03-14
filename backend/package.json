@@ -5,7 +5,7 @@
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
-  "prestart": "node -e \"require('fs').writeFileSync('serviceAccount.json', Buffer.from(process.env.FIREBASE_B64_1 + process.env.FIREBASE_B64_2 + process.env.FIREBASE_B64_3 + process.env.FIREBASE_B64_4, 'base64').toString('utf8'))\"",
+"prestart": "node -e \"require('dotenv').config();if(process.env.FIREBASE_B64_1){require('fs').writeFileSync('serviceAccount.json', Buffer.from(process.env.FIREBASE_B64_1 + process.env.FIREBASE_B64_2 + process.env.FIREBASE_B64_3 + process.env.FIREBASE_B64_4, 'base64').toString('utf8'));console.log('serviceAccount.json created')}\"",
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
