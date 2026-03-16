@@ -1,22 +1,15 @@
-// Email Service - Send OTP emails using nodemailer
-const nodemailer = require('nodemailer');
-require('dotenv').config();
+// Email Service - Send OTP emails using Hostinger SMTP
+const nodemailer = require("nodemailer");
+require("dotenv").config();
 
-// Create transporter (using Gmail SMTP)
-const getGmailPassword = () => {
-  const password = process.env.GMAIL_APP_PASSWORD || process.env.EMAIL_PASS;
-  // Remove spaces from app password (Gmail app passwords sometimes have spaces)
-  return password ? password.replace(/\s+/g, '') : password;
-};
-
+// Create transporter using Hostinger SMTP
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: "smtp.hostinger.com",
+  port: 465,
+  secure: true,
   auth: {
-    user: process.env.GMAIL_USER || process.env.EMAIL_USER, // Your Gmail address
-    pass: getGmailPassword(), // Your Gmail App Password (spaces removed)
-  },
-  tls: {
-    rejectUnauthorized: false, // Ignore self-signed certificate errors
+    user: process.env.EMAIL_USER,   // acadmate@acadmate.eu
+    pass: process.env.EMAIL_PASS,   // mailbox password
   },
 });
 
@@ -24,27 +17,29 @@ const transporter = nodemailer.createTransport({
 const sendOTPEmail = async (email, otp) => {
   try {
     const mailOptions = {
-      from: `"AcadMate" <${process.env.GMAIL_USER || process.env.EMAIL_USER || process.env.SENDGRID_FROM_EMAIL}>`,
+      from: `"AcadMate" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: 'AcadMate - Email Verification OTP',
+      subject: "AcadMate - Email Verification OTP",
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fbf9f1;">
-          <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <div style="text-align: center; margin-bottom: 30px;">
-              <h1 style="color: #f4b30c; margin: 0;">AcadMate</h1>
-            </div>
-            <h2 style="color: #1a1200; margin-bottom: 20px;">Email Verification</h2>
-            <p style="color: #1a1200; font-size: 16px; line-height: 1.6;">
-              Thank you for registering with AcadMate! Please use the following OTP to verify your email address:
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #fbf9f1;">
+          <div style="background-color: white; padding: 30px; border-radius: 10px;">
+            <h1 style="color:#f4b30c; text-align:center;">AcadMate</h1>
+            <h2>Email Verification</h2>
+
+            <p>
+              Thank you for registering with AcadMate. 
+              Please use the OTP below to verify your email.
             </p>
-            <div style="background-color: #f4b30c; color: #1a1200; padding: 20px; border-radius: 8px; text-align: center; margin: 30px 0;">
-              <h1 style="margin: 0; font-size: 36px; letter-spacing: 5px; font-weight: bold;">${otp}</h1>
+
+            <div style="background:#f4b30c; padding:20px; text-align:center; border-radius:8px;">
+              <h1 style="letter-spacing:5px;">${otp}</h1>
             </div>
-            <p style="color: #1a1200; font-size: 14px; line-height: 1.6;">
-              This OTP will expire in <strong>5 minutes</strong>. If you didn't request this OTP, please ignore this email.
-            </p>
-            <hr style="border: none; border-top: 1px solid #ddd9c5; margin: 30px 0;">
-            <p style="color: #666; font-size: 12px; text-align: center; margin: 0;">
+
+            <p>This OTP will expire in <b>5 minutes</b>.</p>
+
+            <hr>
+
+            <p style="font-size:12px; text-align:center;">
               © 2025 AcadMate. All rights reserved.
             </p>
           </div>
@@ -53,14 +48,20 @@ const sendOTPEmail = async (email, otp) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    return { success: true, messageId: info.messageId };
+
+    console.log("✅ Email sent:", info.response);
+
+    return {
+      success: true,
+      messageId: info.messageId,
+    };
+
   } catch (error) {
-    console.error('Error sending email:', error);
-    throw new Error('Failed to send OTP email');
+    console.error("❌ Email Error:", error);
+    throw new Error("Failed to send OTP email");
   }
 };
 
 module.exports = {
   sendOTPEmail,
 };
-

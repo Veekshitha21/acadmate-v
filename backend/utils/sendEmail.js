@@ -5,27 +5,25 @@ const { db } = require("../config/firebase");
 
 // Helper function to get Gmail password (removes spaces)
 const getGmailPassword = () => {
-  const password = process.env.GMAIL_APP_PASSWORD || process.env.EMAIL_PASS;
+  const password =  process.env.EMAIL_PASS;
   // Remove spaces from app password (Gmail app passwords sometimes have spaces)
   return password ? password.replace(/\s+/g, '') : password;
 };
 
 // ✅ Gmail transporter setup
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.hostinger.com",
+  port: 465,
+  secure: true,
   auth: {
-    user: process.env.GMAIL_USER || process.env.EMAIL_USER, // your Gmail address
-    pass: getGmailPassword(), // App Password (spaces removed)
-  },
-  tls: {
-    rejectUnauthorized: false, // ✅ Ignore self-signed certificate errors
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
-
 // ✅ General sendEmail utility
 const sendEmail = async ({ to, subject, text, html }) => {
   try {
-    const fromEmail = process.env.GMAIL_USER || process.env.EMAIL_USER || process.env.SENDGRID_FROM_EMAIL;
+    const fromEmail = process.env.EMAIL_USER 
     await transporter.sendMail({
       from: `"AcadMate" <${fromEmail}>`,
       to,
