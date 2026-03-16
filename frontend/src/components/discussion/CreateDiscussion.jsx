@@ -63,7 +63,7 @@ const CreateDiscussion = ({ userData, isLoggedIn }) => {
     console.log('🔑 Token preview:', token.substring(0, 20) + '...');
     
     // Get backend URL
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
     
     for (let i = 0; i < files.length; i++) {
       try {
@@ -76,7 +76,7 @@ const CreateDiscussion = ({ userData, isLoggedIn }) => {
         console.log(`📤 Uploading ${i + 1}/${files.length}:`, files[i].name);
         
         // Upload to your backend
-        const response = await fetch(`${API_URL}/api/upload`, {
+        const response = await fetch(`${API_URL}/upload`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`

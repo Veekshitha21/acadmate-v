@@ -55,7 +55,7 @@ const Attendance = ({user}) => {
     try {
       
       // Fetch all subjects (including empty ones)
-      const summaryRes = await fetch(`http://localhost:5001/api/attendance/${userId}/summary`, {
+      const summaryRes = await fetch(`https://acadmate.acadmate.eu/api/attendance/${userId}/summary`, {
         credentials: "include",
       });
       
@@ -67,7 +67,7 @@ const Attendance = ({user}) => {
       const summary = await summaryRes.json();
       
       // Fetch attendance records
-      const recordsRes = await fetch(`http://localhost:5001/api/attendance/${userId}`, {
+      const recordsRes = await fetch(`https://acadmate.acadmate.eu/api/attendance/${userId}`, {
         credentials: "include",
       });
 
@@ -134,7 +134,7 @@ const Attendance = ({user}) => {
     }
 
     try {
-      const res = await fetch(`http://localhost:5001/api/attendance/subject/add`, {
+      const res = await fetch(`https://acadmate.acadmate.eu/api/attendance/subject/add`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -165,7 +165,7 @@ const Attendance = ({user}) => {
     setIsDeleting(true);
 
     try {
-      const url = `http://localhost:5001/api/attendance/subject/${userId}/${encodeURIComponent(subject.name)}`;
+      const url = `https://acadmate.acadmate.eu/api/attendance/subject/${userId}/${encodeURIComponent(subject.name)}`;
       
       const response = await fetch(url, {
         method: "DELETE",
@@ -211,7 +211,7 @@ const Attendance = ({user}) => {
     setIsMarkingAttendance(true);
 
     try {
-      const res = await fetch(`http://localhost:5001/api/attendance/mark`, {
+      const res = await fetch(`https://acadmate.acadmate.eu/api/attendance/mark`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -275,7 +275,7 @@ const Attendance = ({user}) => {
 
     try {
       const res = await fetch(
-        `http://localhost:5001/api/attendance/record/${userId}/${encodeURIComponent(subject.name)}/${selectedDate}`,
+        `https://acadmate.acadmate.eu/api/attendance/record/${userId}/${encodeURIComponent(subject.name)}/${selectedDate}`,
         {
           method: "DELETE",
           credentials: "include",

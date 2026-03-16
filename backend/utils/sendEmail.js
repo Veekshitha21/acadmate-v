@@ -12,8 +12,8 @@ const getGmailPassword = () => {
 
 // ✅ Gmail transporter setup
 const transporter = nodemailer.createTransport({
-  host: "smtp.hostinger.com",
-  port: 465,
+  host: process.env.MAIL_HOST,
+  port: Number(process.env.MAIL_PORT),
   secure: true,
   auth: {
     user: process.env.EMAIL_USER,

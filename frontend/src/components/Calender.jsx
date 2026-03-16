@@ -15,7 +15,7 @@ const Calendar = ({ onBack }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [loading, setLoading] = useState(false)
 
-  const API_URL = 'http://localhost:5001/api/reminder'
+  const API_URL = 'https://acadmate.acadmate.eu/api/reminder'
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");

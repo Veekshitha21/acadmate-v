@@ -4,7 +4,7 @@
  */
 
 // Use Vite environment variable or default to localhost:5001
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 export const fileAPI = {
   /**
@@ -20,7 +20,7 @@ export const fileAPI = {
 
     const token = localStorage.getItem('token');
 
-    const response = await fetch(`${API_URL}/api/upload`, {
+    const response = await fetch(`${API_URL}/upload`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -71,7 +71,7 @@ export const fileAPI = {
   async deleteFile(filePath) {
     const token = localStorage.getItem('token');
 
-    const response = await fetch(`${API_URL}/api/upload`, {
+    const response = await fetch(`${API_URL}/upload`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
