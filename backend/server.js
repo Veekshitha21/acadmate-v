@@ -25,7 +25,7 @@ app.use(
       "http://localhost:5174",
       "http://localhost:3000",
       "https://fron.acadmate.eu",
-      "https://frontendacadmate.acadmate.eu/",
+      "https://frontendacadmate.acadmate.eu",
       // "https://acadmate-lac.vercel.app",
       process.env.CLIENT_URL,
     ],

@@ -5,20 +5,11 @@ import { auth } from "../firebase";
 /* ================================
    Base URL
 ================================ */
-// const API_BASE_URL = 
-//   import.meta.env.VITE_API_URL || 
-//   (import.meta.env.MODE === "production"
-//     ? "https://acadmate-7z8f.onrender.com/api" 
-//     : "http://localhost:5001/api");
+const API_BASE_URL =
+  process.env.NODE_ENV === "production"
+    ? process.env.REACT_APP_API_URL || "https://acadmate.acadmate.eu/api"
+    : "http://localhost:5000/api";
 
-/* ================================
-   Base URL - Updated Logic
-================================ */
-const API_BASE_URL = 
-  import.meta.env.VITE_API_URL || 
-  (import.meta.env.PROD // Using Vite's built-in boolean
-    ? "https://acadmate-7z8f.onrender.com/api" 
-    : "http://localhost:5001/api");
 /* ================================
    Axios Instance
 ================================ */
@@ -68,7 +59,6 @@ api.interceptors.response.use(
   }
 );
 
-
 /* ================================
    AUTH API
 ================================ */
@@ -97,46 +87,6 @@ export const authAPI = {
   getProfile: () =>
     api.get("/auth/profile"),
 };
-/* ================================
-   REMINDER API
-================================ */
-export const reminderAPI = {
-  getUserReminders: (userId) => {
-    if (!userId) throw new Error("userId is required");
-    return api.get(`/reminder/user/${encodeURIComponent(userId)}`);
-  },
-
-  addReminder: ({ userId, email, title, date, type }) => {
-    if (!userId || !email || !title || !date || !type) {
-      throw new Error("Missing reminder fields");
-    }
-
-    return api.post("/reminder/add", {
-      userId,
-      email,
-      title,
-      date,
-      type,
-    });
-  },
-
-  deleteReminder: (eventId) => {
-    if (!eventId) throw new Error("eventId is required");
-    return api.delete(`/reminder/${encodeURIComponent(eventId)}`);
-  },
-
-  sendReminderEmail: (email, eventTitle, eventDate) => {
-    if (!email || !eventTitle || !eventDate) {
-      throw new Error("Missing reminder email fields");
-    }
-
-    return api.post("/reminder/send", {
-      email,
-      eventTitle,
-      eventDate,
-    });
-  },
-};
 
 /* ================================
    PROFILE API
@@ -146,76 +96,21 @@ export const profileAPI = {
   update: (data) => api.put("/profile", data),
 };
 
-
+/* ================================
+   REMINDER API
+================================ */
+export const reminderAPI = {
+  sendReminderEmail: (email, eventTitle, eventDate) =>
+    api.post("/reminder/send", { email, eventTitle, eventDate }),
+};
 
 /* ================================
    ATTENDANCE API
 ================================ */
 export const attendanceAPI = {
-  // Get all attendance records
-  getAttendance: (userId) => {
-    if (!userId) throw new Error("userId is required");
-    return api.get(`/attendance/${encodeURIComponent(userId)}`);
-  },
-
-  // Get subject summary (percentage, total classes)
-  getSummary: (userId) => {
-    if (!userId) throw new Error("userId is required");
-    return api.get(`/attendance/${encodeURIComponent(userId)}/summary`);
-  },
-
-  // Add a new subject
-  addSubject: (userId, subject) => {
-    if (!userId || !subject) {
-      throw new Error("userId and subject are required");
-    }
-
-    return api.post("/attendance/subject/add", {
-      userId,
-      subject,
-    });
-  },
-
-  // Delete a subject and its records
-  deleteSubject: (userId, subject) => {
-    if (!userId || !subject) {
-      throw new Error("userId and subject are required");
-    }
-
-    return api.delete(
-      `/attendance/subject/${encodeURIComponent(userId)}/${encodeURIComponent(subject)}`
-    );
-  },
-
-  // Mark present / absent
-  markAttendance: ({ userId, subject, date, status }) => {
-    if (!userId || !subject || !date || !status) {
-      throw new Error("Missing attendance fields");
-    }
-
-    return api.post("/attendance/mark", {
-      userId,
-      subject,
-      date,
-      status,
-    });
-  },
-
-  // Reset attendance for a specific date
-  resetAttendance: (userId, subject, date) => {
-    if (!userId || !subject || !date) {
-      throw new Error("Missing reset fields");
-    }
-
-    return api.delete(
-      `/attendance/record/${encodeURIComponent(userId)}/${encodeURIComponent(
-        subject
-      )}/${encodeURIComponent(date)}`
-    );
-  },
+  mark: (data) => api.post("/attendance", data),
+  getAll: () => api.get("/attendance"),
 };
-
-
 
 /* ================================
    DISCUSSION API
